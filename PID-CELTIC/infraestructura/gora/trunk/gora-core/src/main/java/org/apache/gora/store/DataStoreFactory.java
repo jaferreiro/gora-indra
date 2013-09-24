@@ -76,8 +76,13 @@ public class DataStoreFactory{
   public static Properties createProps() {
     try {
     Properties properties = new Properties();
-      InputStream stream = DataStoreFactory.class.getClassLoader()
-        .getResourceAsStream(GORA_DEFAULT_PROPERTIES_FILE);
+      InputStream stream = DataStoreFactory.class.getClassLoader().getResourceAsStream(GORA_DEFAULT_PROPERTIES_FILE);
+      if (stream == null) {
+          stream = ClassLoader.getSystemResourceAsStream(GORA_DEFAULT_PROPERTIES_FILE) ;
+      }
+      if (stream == null) {
+          stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(GORA_DEFAULT_PROPERTIES_FILE) ;
+      }
       if(stream != null) {
         try {
           properties.load(stream);
