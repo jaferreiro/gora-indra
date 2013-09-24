@@ -19,6 +19,7 @@ package org.apache.gora.store;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -76,8 +77,14 @@ public class DataStoreFactory{
   public static Properties createProps() {
     try {
     Properties properties = new Properties();
-      InputStream stream = DataStoreFactory.class.getClassLoader()
-        .getResourceAsStream(GORA_DEFAULT_PROPERTIES_FILE);
+      if (log.isDebugEnabled()){
+          log.debug("Class loader: {}", DataStoreFactory.class.getClassLoader().getClass()) ;
+          URL propertiesURL = DataStoreFactory.class.getClassLoader().getResource(GORA_DEFAULT_PROPERTIES_FILE) ;
+          if (propertiesURL != null) {
+              log.debug("Properties file found: {}", propertiesURL.getPath()) ;
+          }
+      }
+      InputStream stream = DataStoreFactory.class.getClassLoader().getResourceAsStream(GORA_DEFAULT_PROPERTIES_FILE);
       if(stream != null) {
         try {
           properties.load(stream);
