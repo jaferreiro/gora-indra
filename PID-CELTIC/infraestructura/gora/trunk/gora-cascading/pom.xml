@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <parent>
+    <groupId>org.apache.gora</groupId>
+    <artifactId>gora</artifactId>
+    <version>0.4-indra-SNAPSHOT</version>
+    <relativePath>../</relativePath>
+  </parent>
+  
+  <artifactId>gora-cascading</artifactId>
+  <packaging>bundle</packaging>
+
+  <name>Apache Gora :: Cascading</name>
+  <url>http://gora.apache.org</url>
+  <description>Cascading -> Gora -> DataStore connector.</description>
+  <inceptionYear>2013</inceptionYear>
+  <organization>
+    <name>XXXXXXXXXXXXXXX</name>
+    <url>XXXXXXXXXXXXXXXX</url>
+  </organization>
+
+  <properties>
+    <osgi.import>*</osgi.import>
+    <osgi.export>org.apache.gora*;version="${project.version}";-noimport:=true</osgi.export>
+  </properties>
+
+  <build>
+    <directory>target</directory>
+    <outputDirectory>target/classes</outputDirectory>
+    <finalName>${project.artifactId}-${project.version}</finalName>
+    <testOutputDirectory>target/test-classes</testOutputDirectory>
+    <testSourceDirectory>src/test/java</testSourceDirectory>
+    <sourceDirectory>src/main/java</sourceDirectory>
+    <testResources>
+        <testResource>
+            <directory>src/test/conf/</directory>
+            <includes>
+                <include>**</include>
+            </includes>
+        </testResource>
+    </testResources>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>test-jar</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <version>${build-helper-maven-plugin.version}</version>
+            <executions>
+                <execution>
+                    <phase>generate-sources</phase>
+                    <goals>
+                        <goal>add-source</goal>
+                    </goals>
+                    <configuration>
+                        <sources>
+                            <source>src/examples/java</source>
+                        </sources>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+  </build>
+  
+  <dependencies>
+  
+    <!-- Gora Internal Dependencies -->
+    <dependency>
+        <groupId>org.apache.gora</groupId>
+        <artifactId>gora-core</artifactId>
+    </dependency>  
+  
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+  
+    <!-- Cascading dependencies -->
+    <dependency>
+      <groupId>cascading</groupId>
+      <artifactId>cascading-core</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>com.twitter.elephantbird</groupId>
+      <artifactId>elephant-bird-core</artifactId>
+      <exclusions>
+          <exclusion>
+              <artifactId>hadoop-lzo</artifactId>
+              <groupId>com.hadoop.gplcompression</groupId>
+          </exclusion>
+      </exclusions>
+    </dependency>
+      
+  </dependencies>
+</project>
