@@ -17,16 +17,14 @@
  */
 package org.apache.gora.persistency.impl;
 
-import java.nio.ByteBuffer;
-import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.avro.Schema.Field;
-import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.specific.SpecificRecord;
+import org.apache.commons.lang.IllegalClassException;
 import org.apache.gora.avro.PersistentDatumReader;
 import org.apache.gora.persistency.ListGenericArray;
 import org.apache.gora.persistency.Persistent;
@@ -293,39 +291,21 @@ public abstract class PersistentBase implements Persistent, SpecificRecord {
 
   /** ByteBuffer.hashCode() takes into account the position of the
    * buffer, but we do not want that*/
-  private int getByteBufferHashCode(ByteBuffer buf) {
+/*  private int getByteBufferHashCode(ByteBuffer buf) {
     int h = 1;
     int p = buf.arrayOffset();
     for (int j = buf.limit() - 1; j >= p; j--)
           h = 31 * h + buf.get(j);
     return h;
   }
+*/
   
   public Object clone() {
     try {
       PersistentBase newInstance = (PersistentBase) super.clone();
 
-      List<Field> fields = this.getSchema().getFields();
-      for(Field field: fields) {
-        int pos = field.pos();
-        switch(field.schema().getType()) {
-          case MAP    :
-          case ARRAY  :
-          case RECORD : 
-          case STRING :
-            newInstance.put(pos,
-                       PersistentBase.datumReader.cloneObject(field.schema(), this.get(pos), null));
-            break;
-          case UNION  :
-            int unionIndex = GenericData.get().resolveUnion(field.schema(), this.get(pos));
-            newInstance.put(pos,
-                       PersistentBase.datumReader.cloneObject(field.schema().getTypes().get(unionIndex), this.get(pos), null)) ;
-            break ;
-          case NULL   : break;
-          default     : newInstance.put(pos, this.get(pos)); break;
-        }
-      }
-
+      newInstance.copyFrom(this) ;
+      
       // Restore the state and dirty bits
       newInstance.stateManager = (StateManager) this.stateManager.clone() ;
       return newInstance ;
@@ -356,4 +336,40 @@ public abstract class PersistentBase implements Persistent, SpecificRecord {
       return false;
     return value.equals(old);
   }
+  
+  /**
+   * Copies all data and state from a source PersistentBase to this instance
+   * 
+   * @param source Instance being copied (the called instance)
+   * @return Fluent Interface
+   */
+  public PersistentBase copyFrom(PersistentBase source) {
+      if (!source.getClass().equals(this.getClass())) {
+          throw new IllegalClassException(this.getClass(), source.getClass()) ;
+      }
+      
+      List<Field> fields = this.getSchema().getFields();
+      for(Field field: fields) {
+        int pos = field.pos();
+        switch(field.schema().getType()) {
+          case MAP    :
+          case ARRAY  :
+          case RECORD : 
+          case STRING :
+            this.put(pos,
+                       PersistentBase.datumReader.cloneObject(field.schema(), this.get(pos), null));
+            break;
+          case UNION  :
+            int unionIndex = GenericData.get().resolveUnion(field.schema(), this.get(pos));
+            this.put(pos,
+                       PersistentBase.datumReader.cloneObject(field.schema().getTypes().get(unionIndex), this.get(pos), null)) ;
+            break ;
+          case NULL   : break;
+          default     : this.put(pos, this.get(pos)); break;
+        }
+      }
+
+      return this ;
+  }
+  
 }
