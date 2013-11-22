@@ -904,6 +904,12 @@
                 <version>${elephant-bird.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.twitter.elephantbird</groupId>
+                <artifactId>elephant-bird-hadoop-compat</artifactId>
+                <version>${elephant-bird.version}</version>
+            </dependency>
+
             <!-- Logging Dependencies -->
             <dependency>
                 <groupId>org.slf4j</groupId>

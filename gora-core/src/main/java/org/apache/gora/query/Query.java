@@ -18,8 +18,6 @@
 
 package org.apache.gora.query;
 
-import java.io.IOException;
-
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.store.DataStore;
 
