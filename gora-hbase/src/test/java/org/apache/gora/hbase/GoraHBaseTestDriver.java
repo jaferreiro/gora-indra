@@ -22,11 +22,8 @@ import org.apache.gora.GoraTestDriver;
 import org.apache.gora.hbase.store.HBaseStore;
 import org.apache.gora.hbase.util.HBaseClusterSingleton;
 import org.apache.hadoop.conf.Configuration;
-
-//HBase imports
 import org.apache.hadoop.hbase.HBaseTestingUtility;
-import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
+//HBase imports
 
 /**
  * Helper class for third part tests using gora-hbase backend. 
