@@ -1,6 +1,7 @@
 package org.apache.gora.cascading.tap;
 
 import java.io.IOException;
+import java.util.Map.Entry;
 
 import org.apache.gora.mapreduce.GoraInputFormat;
 import org.apache.gora.mapreduce.GoraOutputFormat;
@@ -10,6 +11,7 @@ import org.apache.gora.query.Query;
 import org.apache.gora.store.DataStore;
 import org.apache.gora.store.DataStoreFactory;
 import org.apache.gora.util.GoraException;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.RecordReader;
@@ -37,8 +39,8 @@ public class GoraScheme extends Scheme<JobConf,          // Config
 
     private Class<? extends Persistent> persistentClass;
     private Class<?> keyClass;
-    private DataStore dataStore ;
-    private Query query ;
+    private DataStore<?, ? extends Persistent> dataStore ;
+    private Query<?, ? extends Persistent> query ;
     
 // TODO: Cargar filtros, rangos de clave, etc a cargar para sourceConfInit
     
@@ -99,29 +101,73 @@ public class GoraScheme extends Scheme<JobConf,          // Config
         return this.dataStore ;
     }
     
+    @SuppressWarnings("unchecked")
     public void setQuery(Query query) {
         this.query = query ;
     }
     
     @Override
-    public void sinkConfInit(FlowProcess<JobConf> flowProcess, Tap<JobConf, RecordReader, OutputCollector> tap, JobConf conf) {
+    public void sinkConfInit(FlowProcess<JobConf> flowProcess, Tap<JobConf, RecordReader, OutputCollector> tap, JobConf jobConf) {
         //GoraOutputFormat realOutputFormat = GoraOutputFormatFactory.createInstance(String.class, PersistentBase.class);
-        DeprecatedOutputFormatWrapper.setOutputFormat(GoraOutputFormat.class, conf) ;
+        try {
+            // Workaround to load Job configuration into JobConf.
+            Job tmpGoraJob = new Job(jobConf);
+            GoraOutputFormat.setOutput(tmpGoraJob, this.getDataStore(jobConf), true) ;
+            this.mergeConfigurationFromTo(tmpGoraJob.getConfiguration(), jobConf) ; 
+        } catch (Exception e) {
+            throw new RuntimeException("Failed then configuring GoraInputFormat in the job",e) ;
+        }
+        DeprecatedOutputFormatWrapper.setOutputFormat(GoraOutputFormat.class, jobConf) ;
     }
 
     @Override
-    public void sourceConfInit(FlowProcess<JobConf> flowProcess, Tap<JobConf, RecordReader, OutputCollector> tap, JobConf conf) {
-
-        Job tmpJob = new Job(conf) ;
-        GoraInputFormat.setInput(conf, this.query, this.getDataStore(conf), false) ;
-        DeprecatedInputFormatWrapper.setInputFormat(GoraInputFormat.class, conf, GoraDeprecatedInputFormatValueCopier.class) ;
+    public void sourceConfInit(FlowProcess<JobConf> flowProcess, Tap<JobConf, RecordReader, OutputCollector> tap, JobConf jobConf) {
+        try {
+            // Workaround to load Job configuration into JobConf.
+            Job tmpGoraJob = new Job(jobConf);
+            this.genericSetInput(this.query, this.getDataStore(jobConf), this.keyClass, this.persistentClass, tmpGoraJob) ;
+            this.mergeConfigurationFromTo(tmpGoraJob.getConfiguration(), jobConf) ; 
+        } catch (Exception e) {
+            throw new RuntimeException("Failed then configuring GoraInputFormat in the job",e) ;
+        }
+        DeprecatedInputFormatWrapper.setInputFormat(GoraInputFormat.class, jobConf, GoraDeprecatedInputFormatValueCopier.class) ;
     }
     
+    /**
+     * Workaround for generics hassle. Executes GoraInputFormat.setInput() for a query and datastore on a job.
+     * The query and datastore must be of the same generics types.
+     * @param query 
+     * @param dataStore
+     * @param keyClass
+     * @param persistentClass
+     * @param job Job configuration
+     * @throws IOException
+     */
     @SuppressWarnings("unchecked")
-    private <K,V extends Persistent> void genericSetInput(Query q, DataStore d, Job conf) throws IOException {
-        GoraInputFormat.setInput(conf, q, d, false) ;
+    private <K1, V1 extends Persistent,
+             K2, V2 extends Persistent,
+             K, V extends Persistent>
+    void genericSetInput(Query<K1,V1> query, DataStore<K2,V2> dataStore, Class<K> keyClass, Class<V> persistentClass, Job job) throws IOException {
+        GoraInputFormat.setInput(job, (Query<K,V>)query, (DataStore<K,V>)dataStore, false) ;
     }
 
+    /**
+     * Merges configuration from the 'from' into the 'to'.
+     * If a 'from' key exists in 'to', it is ignored.
+     * If a 'from' key does not exists in 'to', it is added to 'to'.
+     * 
+     * Workaround used to merge Job configuration into JobConf
+     * @param from
+     * @param to
+     */
+    private void mergeConfigurationFromTo(Configuration from, Configuration to) {
+        for(Entry<String,String> fromEntry: from) {
+            if (to.get(fromEntry.getKey()) == null) {
+                to.set(fromEntry.getKey(), fromEntry.getValue()) ;
+            }
+        }
+    }
+    
     @SuppressWarnings("unchecked")
     @Override
     public boolean source(FlowProcess<JobConf> flowProcess, SourceCall<Object[], RecordReader> sourceCall) throws IOException {
