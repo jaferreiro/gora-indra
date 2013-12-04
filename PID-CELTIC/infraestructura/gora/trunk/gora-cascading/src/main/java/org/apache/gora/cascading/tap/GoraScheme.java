@@ -94,7 +94,7 @@ public class GoraScheme extends Scheme<JobConf,          // Config
         return this.persistentClass ;
     }
 
-    public DataStore<?, ?> getDataStore(JobConf conf) throws GoraException {
+    public DataStore<?, ? extends Persistent> getDataStore(JobConf conf) throws GoraException {
         if (this.dataStore == null) {
             this.dataStore = DataStoreFactory.getDataStore(this.keyClass, this.persistentClass, conf) ;
         }
@@ -196,7 +196,6 @@ public class GoraScheme extends Scheme<JobConf,          // Config
         PersistentBase persistent = (PersistentBase) fields.get(1) ;
 
         sinkCall.getOutput().collect(key, persistent) ;
-        
     }
 
 }

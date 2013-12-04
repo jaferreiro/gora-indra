@@ -73,6 +73,8 @@ public class GoraTap extends Tap<JobConf, RecordReader, OutputCollector> {
         // @param input puede ser null y habrá que crear una instancia de GoraRecordReader
         
         // Internamente, TupleEntryIterator necesitará un TupleEntrySchemeIterator
+        
+        
         return null;
     }
     
