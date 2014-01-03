@@ -2,14 +2,18 @@ package org.apache.gora.cascading.tap;
 
 import java.io.IOException;
 
+import org.apache.gora.store.DataStore;
+
 import cascading.tuple.Fields;
 import cascading.tuple.TupleEntry;
 import cascading.tuple.TupleEntryCollector;
 
 public class GoraTupleEntryCollector extends TupleEntryCollector {
 
-    public GoraTupleEntryCollector() {
-        // TODO Auto-generated constructor stub
+    private GoraScheme scheme ;
+    
+    public GoraTupleEntryCollector(GoraScheme scheme) {
+        this.scheme = scheme ;
     }
 
     public GoraTupleEntryCollector(Fields declared) {
@@ -19,8 +23,8 @@ public class GoraTupleEntryCollector extends TupleEntryCollector {
 
     @Override
     protected void collect(TupleEntry tupleEntry) throws IOException {
-        // TODO Auto-generated method stub
-
+// TODO IMPLEMENTAR
+        return ;
     }
 
 }

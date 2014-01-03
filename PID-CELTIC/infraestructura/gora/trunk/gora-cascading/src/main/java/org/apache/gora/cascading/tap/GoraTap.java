@@ -1,6 +1,7 @@
 package org.apache.gora.cascading.tap;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputCollector;
@@ -13,8 +14,11 @@ import cascading.tuple.TupleEntryCollector;
 import cascading.tuple.TupleEntryIterator;
 
 @SuppressWarnings({ "rawtypes" })
-public class GoraTap extends Tap<JobConf, RecordReader, OutputCollector> {
+public class GoraTap extends Tap<Object, RecordReader, OutputCollector> {
 
+    // TODO Change this to something decent. Does this identifier affects optimizations of Taps usage?
+    private final String tapId = UUID.randomUUID().toString() ;
+    
     public GoraTap (GoraScheme scheme) {
         this(scheme, SinkMode.UPDATE) ;
     }
@@ -31,51 +35,50 @@ public class GoraTap extends Tap<JobConf, RecordReader, OutputCollector> {
     
     @Override
     public String getIdentifier() {
-        return this.getScheme().getPersistentClass().getName() ;
+        // TODO Change this to something decent. Does this identifier affects optimizations of Taps usage?
+        return this.tapId ;
     }
 
     @Override
-    public TupleEntryCollector openForWrite(FlowProcess<JobConf> flowProcess, OutputCollector output) throws IOException {
-        // Devolver un TupleEntryCollector que se recibirá instancias TupleEntry/Tuple para ir grabando.
-        // @param otuput puede ser null y habrá que crear una instancia de GoraRecordWriter
-
-        // Internamente, TupleEntryIterator necesitará un TupleEntrySchemeIterator
-        return null;
-    }
-
-    @Override
-    public boolean createResource(JobConf conf) throws IOException {
-        this.getScheme().getDataStore(conf).createSchema() ;
+    public boolean createResource(Object conf) throws IOException {
+        this.getScheme().getDataStore((JobConf)conf).createSchema() ;
         return true ; 
     }
 
     @Override
-    public boolean deleteResource(JobConf conf) throws IOException {
-        this.getScheme().getDataStore(conf).deleteSchema() ;
+    public boolean deleteResource(Object conf) throws IOException {
+        this.getScheme().getDataStore((JobConf)conf).deleteSchema() ;
         return true ;
     }
 
     @Override
-    public boolean resourceExists(JobConf conf) throws IOException {
-        return this.getScheme().getDataStore(conf).schemaExists() ;
+    public boolean resourceExists(Object conf) throws IOException {
+        return this.getScheme().getDataStore((JobConf)conf).schemaExists() ;
     }
 
     @Override
-    public long getModifiedTime(JobConf conf) throws IOException {
+    public long getModifiedTime(Object conf) throws IOException {
         // Leer el tiempo de modificación del Scheme (llevar control de save en el Scheme)
         return 0;
     }
+    
+    @Override
+    public TupleEntryCollector openForWrite(FlowProcess<Object> flowProcess, OutputCollector output) throws IOException {
+        // Devolver un TupleEntryCollector que se recibirá instancias TupleEntry/Tuple para ir grabando.
+        // @param output puede ser null y habrá que crear una instancia de GoraRecordWriter
+
+        return new GoraTupleEntryCollector(this.getScheme()) ;
+    }
 
     @Override
-    public TupleEntryIterator openForRead(FlowProcess<JobConf> flowProcess, RecordReader input) throws IOException {
+    public TupleEntryIterator openForRead(FlowProcess<Object> flowProcess, RecordReader input) throws IOException {
         // Devolver el TupleEntryIterator que a su vez devolverá instancias TupleEntry (cada registro),
         // que iterará sobre los resultados de un scan
         // @param input puede ser null y habrá que crear una instancia de GoraRecordReader
         
         // Internamente, TupleEntryIterator necesitará un TupleEntrySchemeIterator
         
-        
-        return null;
+        return new GoraTupleEntryIterator(this.getScheme()) ;
     }
     
 }
