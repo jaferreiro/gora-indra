@@ -2,6 +2,7 @@ package org.apache.gora.cascading.tap;
 
 import java.io.IOException;
 import java.util.Map.Entry;
+import java.util.Properties;
 
 import org.apache.gora.mapreduce.GoraInputFormat;
 import org.apache.gora.mapreduce.GoraOutputFormat;
@@ -29,7 +30,7 @@ import com.twitter.elephantbird.mapred.input.DeprecatedInputFormatWrapper;
 import com.twitter.elephantbird.mapred.output.DeprecatedOutputFormatWrapper;
 
 @SuppressWarnings("rawtypes")
-public class GoraScheme extends Scheme<JobConf,          // Config
+public class GoraLocalScheme extends Scheme<Properties,  // Config
                                        RecordReader,     // Input
                                        OutputCollector,  // Output
                                        Object[],         // SourceContext
@@ -44,7 +45,7 @@ public class GoraScheme extends Scheme<JobConf,          // Config
     
 // TODO: Cargar filtros, rangos de clave, etc a cargar para sourceConfInit
     
-    public GoraScheme(Class<?> keyClass, Class<? extends Persistent> persistentClass) {
+    public GoraLocalScheme(Class<?> keyClass, Class<? extends Persistent> persistentClass) {
         this(keyClass, persistentClass, /*source fields*/ Fields.ALL, /*sink fields*/ Fields.ALL, /*numSinkParts*/ 0) ;
     }
 
@@ -52,7 +53,7 @@ public class GoraScheme extends Scheme<JobConf,          // Config
      * Constructor with the fields to load
      * @param sourceFields {@link Fields#ALL} | Strings with fields names from defined in .avsc model (only from 1st level).
      */
-    public GoraScheme(Class<?> keyClass, Class<? extends Persistent> persistentClass, Fields sourceFields) {
+    public GoraLocalScheme(Class<?> keyClass, Class<? extends Persistent> persistentClass, Fields sourceFields) {
         this(keyClass, persistentClass, sourceFields, /*sink fields*/ null, /*numSinkParts*/ 0) ;
     }
 
@@ -61,7 +62,7 @@ public class GoraScheme extends Scheme<JobConf,          // Config
      * @param sourceFields {@link Fields#ALL} | Strings with fields names from defined in .avsc model (only from 1st level).
      * @param sumSinkParts {@link Scheme}
      */
-    public GoraScheme(Class<?> keyClass, Class<? extends Persistent> persistentClass, Fields sourceFields, int numSinkParts) {
+    public GoraLocalScheme(Class<?> keyClass, Class<? extends Persistent> persistentClass, Fields sourceFields, int numSinkParts) {
         this(keyClass, persistentClass, sourceFields, /*sink fields*/ null, numSinkParts) ;
     }
 
@@ -70,7 +71,7 @@ public class GoraScheme extends Scheme<JobConf,          // Config
      * @param sourceFields Strings with fields names from defined in .avsc model (only from 1st level).
      * @param sinkFields Strings with fields names from defined in .avsc model (only from 1st level).
      */
-    public GoraScheme(Class<?> keyClass, Class<? extends Persistent> persistentClass, Fields sourceFields, Fields sinkFields) {
+    public GoraLocalScheme(Class<?> keyClass, Class<? extends Persistent> persistentClass, Fields sourceFields, Fields sinkFields) {
         this(keyClass, persistentClass, sourceFields, sinkFields, /*numSinkParts*/ 0) ;
     }
 
@@ -80,7 +81,7 @@ public class GoraScheme extends Scheme<JobConf,          // Config
      * @param sinkFields Strings with fields names from defined in .avsc model (only from 1st level).
      * @param sumSinkParts {@link Scheme}
      */
-    public GoraScheme(Class<?> keyClass, Class<? extends Persistent> persistentClass, Fields sourceFields, Fields sinkFields, int numSinkParts) {
+    public GoraLocalScheme(Class<?> keyClass, Class<? extends Persistent> persistentClass, Fields sourceFields, Fields sinkFields, int numSinkParts) {
         super(sourceFields, sinkFields, numSinkParts);
         this.keyClass = keyClass ;
         this.persistentClass = persistentClass ;
@@ -114,77 +115,16 @@ public class GoraScheme extends Scheme<JobConf,          // Config
     }
     
     @Override
-    public void sinkConfInit(FlowProcess<JobConf> flowProcess, Tap<JobConf, RecordReader, OutputCollector> tap, JobConf jobConf) {
-        // XXX Ugly, but temporary to know why is all this here...
-        try {
-            // Workaround to load Job configuration into JobConf.
-            Job tmpGoraJob = new Job(jobConf);
-            GoraOutputFormat.setOutput(tmpGoraJob, this.getDataStore(jobConf), true) ;
-            // Copies the configuration set by "setOutput()" into jobConf.
-            this.mergeConfigurationFromTo(tmpGoraJob.getConfiguration(), jobConf) ; 
-        } catch (Exception e) {
-            throw new RuntimeException("Failed then configuring GoraInputFormat in the job",e) ;
-        }
-        DeprecatedOutputFormatWrapper.setOutputFormat(GoraOutputFormat.class, jobConf) ;
+    public void sinkConfInit(FlowProcess<Properties> flowProcess, Tap<Properties, RecordReader, OutputCollector> tap, Properties propsConf) {
     }
 
     @Override
-    public void sourceConfInit(FlowProcess<JobConf> flowProcess, Tap<JobConf, RecordReader, OutputCollector> tap, JobConf jobConf) {
-        // XXX Ugly, but temporary to know why is all this here...
-        try {
-            // Workaround to load Job configuration into JobConf.
-            Job tmpGoraJob = new Job(jobConf);
-            // Generics funnel
-            if (this.query == null) {
-                this.setQuery(this.getDataStore(jobConf).newQuery()) ;
-            }
-            this.genericSetInput(this.query, this.getDataStore(jobConf), this.keyClass, this.persistentClass, tmpGoraJob) ;
-            // Copies the configuration set by "setInput()" into jobConf.
-            this.mergeConfigurationFromTo(tmpGoraJob.getConfiguration(), jobConf) ; 
-        } catch (Exception e) {
-            throw new RuntimeException("Failed then configuring GoraInputFormat in the job",e) ;
-        }
-        DeprecatedInputFormatWrapper.setInputFormat(GoraInputFormat.class, jobConf, GoraDeprecatedInputFormatValueCopier.class) ;
-    }
-    
-    /**
-     * Generics funnel: Workaround for generics hassle. Executes GoraInputFormat.setInput() for a query and datastore on a job.
-     * The query and datastore must be of the same generics types.
-     * @param query 
-     * @param dataStore
-     * @param keyClass
-     * @param persistentClass
-     * @param job Job configuration
-     * @throws IOException
-     */
-    @SuppressWarnings("unchecked")
-    private <K1, V1 extends Persistent,
-             K2, V2 extends Persistent,
-             K, V extends Persistent>
-    void genericSetInput(Query<K1,V1> query, DataStore<K2,V2> dataStore, Class<K> keyClass, Class<V> persistentClass, Job job) throws IOException {
-        GoraInputFormat.setInput(job, (Query<K,V>)query, (DataStore<K,V>)dataStore, false) ;
-    }
-
-    /**
-     * Merges configuration from the 'from' into the 'to'.
-     * If a 'from' key exists in 'to', it is ignored.
-     * If a 'from' key does not exists in 'to', it is added to 'to'.
-     * 
-     * Workaround used to merge Job configuration into JobConf
-     * @param from
-     * @param to
-     */
-    private void mergeConfigurationFromTo(Configuration from, Configuration to) {
-        for(Entry<String,String> fromEntry: from) {
-            if (to.get(fromEntry.getKey()) == null) {
-                to.set(fromEntry.getKey(), fromEntry.getValue()) ;
-            }
-        }
+    public void sourceConfInit(FlowProcess<Properties> flowProcess, Tap<Properties, RecordReader, OutputCollector> tap, Properties propsConf) {
     }
     
     @SuppressWarnings("unchecked")
     @Override
-    public boolean source(FlowProcess<JobConf> flowProcess, SourceCall<Object[], RecordReader> sourceCall) throws IOException {
+    public boolean source(FlowProcess<Properties> flowProcess, SourceCall<Object[], RecordReader> sourceCall) throws IOException {
 
         String key = null ;
         PersistentBase value = null ;
@@ -203,7 +143,7 @@ public class GoraScheme extends Scheme<JobConf,          // Config
 
     @SuppressWarnings("unchecked")
     @Override
-    public void sink(FlowProcess<JobConf> flowProcess, SinkCall<Object[], OutputCollector> sinkCall) throws IOException {
+    public void sink(FlowProcess<Properties> flowProcess, SinkCall<Object[], OutputCollector> sinkCall) throws IOException {
         Fields fields = sinkCall.getOutgoingEntry().getFields() ;
 
         String key = (String)fields.get(0) ;

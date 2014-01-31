@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gora-orm>
+
+    <!-- ============================================= -->
+    <!-- Extración: twitter raw - TwitterRaw           -->
+    <!-- ============================================= -->
+
+    <table name="test"> <!-- Configuración de familias -->
+        <family name="family1"  maxVersions="1" />
+        <family name="family2"  maxVersions="1" />
+    </table>
+
+    <class table="test" keyClass="java.lang.String" name="es.indra.innovationlabs.celtic.ormgoratypes.tests.storage.TestRow">
+        <field name="defaultLong1"      family="family1" qualifier="defaultLong1"    />
+        <field name="defaultStringEmpty" family="family1" qualifier="defaultStringEmpty"    />
+        <field name="unionString"       family="family1" qualifier="unionString"    />
+        <field name="unionRecursive"    family="family1" qualifier="unionRecursive" />
+        <field name="columnLong"        family="family1" qualifier="colLong"     />
+        <field name="unionLong"         family="family1" qualifier="unionLong"     />
+        <field name="unionDefNull"      family="family1" qualifier="unionDefNull" />
+
+        <field name="family2"       family="family2" />
+    </class>
+
+</gora-orm>
