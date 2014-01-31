@@ -356,6 +356,11 @@
                         <autoVersionSubmodules>true</autoVersionSubmodules>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>${maven-jar-plugin.version}</version>
+                </plugin>
                 <!--This plugin's configuration is used to store Eclipse 
                     m2e settings only. It has no influence on the Maven build itself. -->
                 <plugin>
@@ -391,6 +396,20 @@
                                         <ignore />
                                     </action>
                                 </pluginExecution>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.codehaus.mojo</groupId>
+                                        <artifactId>build-helper-maven-plugin</artifactId>
+                                        <versionRange>[1.7,)</versionRange>
+                                        <goals>
+                                            <goal>add-source</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore />
+                                    </action>
+                                </pluginExecution>
+
                             </pluginExecutions>
                         </lifecycleMappingMetadata>
                     </configuration>
@@ -606,7 +625,7 @@
         <pig.version>0.11.0</pig.version>
 
         <!-- Cascading Dependencies -->
-        <cascading.version>2.1.6</cascading.version>
+        <cascading.version>2.5.1</cascading.version>
         <elephant-bird.version>4.2</elephant-bird.version>
 
         <!-- Logging Dependencies -->
@@ -895,6 +914,18 @@
             <dependency>
                 <groupId>cascading</groupId>
                 <artifactId>cascading-core</artifactId>
+                <version>${cascading.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>cascading</groupId>
+                <artifactId>cascading-local</artifactId>
+                <version>${cascading.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>cascading</groupId>
+                <artifactId>cascading-hadoop</artifactId>
                 <version>${cascading.version}</version>
             </dependency>
 
