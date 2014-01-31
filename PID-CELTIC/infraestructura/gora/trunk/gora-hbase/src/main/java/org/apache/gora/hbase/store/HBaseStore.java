@@ -90,7 +90,7 @@ implements Configurable {
   public static final String DEFAULT_MAPPING_FILE = "gora-hbase-mapping.xml";
 
   private static final String SCANNER_CACHING_PROPERTIES_KEY = "scanner.caching" ;
-  private static final int SCANNER_CACHING_PROPERTIES_DEFAULT = 1000 ;
+  private static final int SCANNER_CACHING_PROPERTIES_DEFAULT = 0 ;
   
   private volatile HBaseAdmin admin;
 
