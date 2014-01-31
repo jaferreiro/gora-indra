@@ -1,6 +1,7 @@
 package org.apache.gora.cascading.tap;
 
 import java.io.IOException;
+import java.util.Properties;
 import java.util.UUID;
 import java.util.Map.Entry;
 
@@ -28,7 +29,7 @@ import cascading.tuple.TupleEntryCollector;
 import cascading.tuple.TupleEntryIterator;
 
 @SuppressWarnings({ "rawtypes" })
-public class GoraTap extends Tap<JobConf, RecordReader, OutputCollector> {
+public class GoraLocalTap extends Tap<Properties, RecordReader, OutputCollector> {
 
     // TODO Change this to something decent. Does this identifier affects optimizations of Taps usage?
     private final String tapId = UUID.randomUUID().toString() ;
@@ -40,11 +41,11 @@ public class GoraTap extends Tap<JobConf, RecordReader, OutputCollector> {
     private DataStore<?, ? extends Persistent> dataStore ;
     private Query<?, ? extends Persistent> query ;
     
-    public GoraTap (Class<?> keyClass, Class<? extends Persistent> persistentClass, GoraScheme scheme) {
+    public GoraLocalTap (Class<?> keyClass, Class<? extends Persistent> persistentClass, GoraLocalScheme scheme) {
         this(keyClass, persistentClass, scheme, SinkMode.KEEP) ;
     }
     
-    public GoraTap (Class<?> keyClass, Class<? extends Persistent> persistentClass, GoraScheme scheme, SinkMode sinkMode) {
+    public GoraLocalTap (Class<?> keyClass, Class<? extends Persistent> persistentClass, GoraLocalScheme scheme, SinkMode sinkMode) {
         super(scheme, sinkMode) ;
         this.keyClass = keyClass ;
         this.persistentClass = persistentClass ;
@@ -65,9 +66,9 @@ public class GoraTap extends Tap<JobConf, RecordReader, OutputCollector> {
     }
     
     @Override
-    public GoraScheme getScheme()
+    public GoraLocalScheme getScheme()
     {
-        return (GoraScheme) super.getScheme() ;
+        return (GoraLocalScheme) super.getScheme() ;
     }
     
     @Override
@@ -77,29 +78,29 @@ public class GoraTap extends Tap<JobConf, RecordReader, OutputCollector> {
     }
 
     @Override
-    public boolean createResource(JobConf conf) throws IOException {
+    public boolean createResource(Properties conf) throws IOException {
         this.getDataStore(conf).createSchema() ;
         return true ; 
     }
 
     @Override
-    public boolean deleteResource(JobConf conf) throws IOException {
+    public boolean deleteResource(Properties conf) throws IOException {
         this.getDataStore(conf).deleteSchema() ;
         return true ;
     }
 
     @Override
-    public boolean resourceExists(JobConf conf) throws IOException {
+    public boolean resourceExists(Properties conf) throws IOException {
         return this.getDataStore(conf).schemaExists() ;
     }
 
     @Override
-    public long getModifiedTime(JobConf conf) throws IOException {
+    public long getModifiedTime(Properties conf) throws IOException {
         return System.currentTimeMillis(); // currently unable to find last mod time on a table
     }
 
     @Override
-    public TupleEntryIterator openForRead(FlowProcess<JobConf> flowProcess, RecordReader input) throws IOException {
+    public TupleEntryIterator openForRead(FlowProcess<Properties> flowProcess, RecordReader input) throws IOException {
         // Devolver el TupleEntryIterator que a su vez devolverá instancias TupleEntry (cada registro),
         // que iterará sobre los resultados de un scan
         // @param input puede ser null y habrá que crear una instancia de GoraRecordReader
@@ -111,7 +112,7 @@ public class GoraTap extends Tap<JobConf, RecordReader, OutputCollector> {
     }
 
     @Override
-    public TupleEntryCollector openForWrite(FlowProcess<JobConf> flowProcess, OutputCollector output) throws IOException {
+    public TupleEntryCollector openForWrite(FlowProcess<Properties> flowProcess, OutputCollector output) throws IOException {
         // Devolver un TupleEntryCollector que se recibirá instancias TupleEntry/Tuple para ir grabando.
         // @param output puede ser null y habrá que crear una instancia de GoraRecordWriter
 
@@ -121,57 +122,12 @@ public class GoraTap extends Tap<JobConf, RecordReader, OutputCollector> {
     }
 
     @Override
-    public void sourceConfInit(FlowProcess<JobConf> flowProcess, JobConf conf) {
-        // XXX Ugly, but temporary to know why is all this here...
-        try {
-            // Workaround to load Job configuration into JobConf.
-            Job tmpGoraJob = new Job(conf);
-            // Generics funnel
-            if (this.query == null) {
-                this.setQuery(this.getDataStore(conf).newQuery()) ;
-            }
-            this.genericSetInput(this.query, this.getDataStore(conf), this.keyClass, this.persistentClass, tmpGoraJob) ;
-            // Copies the configuration set by "setInput()" into jobConf.
-            this.mergeConfigurationFromTo(tmpGoraJob.getConfiguration(), conf) ; 
-        } catch (Exception e) {
-            throw new RuntimeException("Failed then configuring GoraInputFormat in the job",e) ;
-        }
-        DeprecatedInputFormatWrapper.setInputFormat(GoraInputFormat.class, conf, GoraDeprecatedInputFormatValueCopier.class) ;
-        super.sourceConfInit(flowProcess, conf);
+    public void sourceConfInit(FlowProcess<Properties> flowProcess, Properties propsConf) {
+        super.sourceConfInit(flowProcess, propsConf);
     }
 
     @Override
-    public void sinkConfInit(FlowProcess<JobConf> flowProcess, JobConf conf) {
-
-        // do not delete if initialized from within a task
-        if (isReplace() && conf.get("mapred.task.partition") == null) {
-            try {
-                this.deleteResource(conf);
-            } catch (IOException e) {
-                throw new RuntimeException("could not delete resource: " + e);
-            }
-        } else if (isUpdate()) {
-            try {
-                this.createResource(conf);
-            } catch (IOException e) {
-                throw new RuntimeException("error creating the sink resource !");
-            }
-        }
-
-        // XXX Ugly, but temporary to know why is all this here...
-        try {
-            // Workaround to load Job configuration into JobConf.
-            Job tmpGoraJob = new Job(conf);
-            GoraOutputFormat.setOutput(tmpGoraJob, this.getDataStore(conf), true) ;
-            // Copies the configuration set by "setOutput()" into jobConf.
-            this.mergeConfigurationFromTo(tmpGoraJob.getConfiguration(), conf) ; 
-        } catch (Exception e) {
-            throw new RuntimeException("Failed then configuring GoraInputFormat in the job",e) ;
-        }
-        DeprecatedOutputFormatWrapper.setOutputFormat(GoraOutputFormat.class, conf) ;
-        
-        
-        // TODO Auto-generated method stub
+    public void sinkConfInit(FlowProcess<Properties> flowProcess, Properties conf) {
         super.sinkConfInit(flowProcess, conf);
     }
 
