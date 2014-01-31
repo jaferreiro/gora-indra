@@ -226,6 +226,11 @@ public class TestHBaseStore extends DataStoreTestBase {
     table.close();
   }
 
+  @Test
+  public void assertScannerCachingValue() {
+    Assert.assertEquals(1000, ((HBaseStore<String,WebPage>)this.webPageStore).getScannerCaching()) ;
+    Assert.assertEquals(1000, ((HBaseStore<String,Employee>)this.employeeStore).getScannerCaching()) ;
+  }
 
   @Override
   public void testQueryEndKey() throws IOException {
