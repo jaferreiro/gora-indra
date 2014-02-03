@@ -38,8 +38,6 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
 
     private static final long serialVersionUID = 1L;
 
-    private Class<? extends Persistent> persistentClass;
-    private Class<?> keyClass;
     private DataStore<?, ? extends Persistent> dataStore ;
     private Query<?, ? extends Persistent> query ;
     
