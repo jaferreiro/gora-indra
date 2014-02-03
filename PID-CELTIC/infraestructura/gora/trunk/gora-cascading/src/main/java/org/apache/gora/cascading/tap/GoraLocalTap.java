@@ -25,6 +25,7 @@ import cascading.flow.FlowProcess;
 import cascading.tap.SinkMode;
 import cascading.tap.Tap;
 import cascading.tap.hadoop.io.HadoopTupleEntrySchemeIterator;
+import cascading.tuple.Fields;
 import cascading.tuple.TupleEntryCollector;
 import cascading.tuple.TupleEntryIterator;
 
@@ -34,12 +35,15 @@ public class GoraLocalTap extends Tap<Properties, RecordReader, OutputCollector>
     // TODO Change this to something decent. Does this identifier affects optimizations of Taps usage?
     private final String tapId = UUID.randomUUID().toString() ;
 
-    private Class<? extends Persistent> persistentClass;
     private Class<?> keyClass;
+    private Class<? extends Persistent> persistentClass;
 
     // TODO transient?
     private DataStore<?, ? extends Persistent> dataStore ;
     private Query<?, ? extends Persistent> query ;
+    
+    // HBase/HDFS configuration
+    private JobConf jobConfiguration ;
     
     public GoraLocalTap (Class<?> keyClass, Class<? extends Persistent> persistentClass, GoraLocalScheme scheme) {
         this(keyClass, persistentClass, scheme, SinkMode.KEEP) ;
@@ -49,18 +53,18 @@ public class GoraLocalTap extends Tap<Properties, RecordReader, OutputCollector>
         super(scheme, sinkMode) ;
         this.keyClass = keyClass ;
         this.persistentClass = persistentClass ;
+        this.jobConfiguration = new JobConf(new Configuration()) ;
     }
 
     /**
      * Retrieves the datastore
-     * @param conf (Optional) Needed the first time the datastore is retrieves for this scheme.
-     *             In subsequent calls is ignored since the datastore is taken from cache.
+     * @param _conf Ignored properties configuration, since the configuration needed for the dataStore is taken from gora.properties and from *-site.xml(Hadoop)
      * @return
      * @throws GoraException
      */
-    public DataStore<?, ? extends Persistent> getDataStore(JobConf conf) throws GoraException {
+    public DataStore<?, ? extends Persistent> getDataStore(Properties _conf) throws GoraException {
         if (this.dataStore == null) {
-            this.dataStore = DataStoreFactory.getDataStore(this.keyClass, this.persistentClass, conf) ;
+            this.dataStore = DataStoreFactory.getDataStore(this.keyClass, this.persistentClass, this.jobConfiguration) ;
         }
         return this.dataStore ;
     }
@@ -78,37 +82,30 @@ public class GoraLocalTap extends Tap<Properties, RecordReader, OutputCollector>
     }
 
     @Override
-    public boolean createResource(Properties conf) throws IOException {
-        this.getDataStore(conf).createSchema() ;
+    public boolean createResource(Properties _conf) throws IOException {
+        this.getDataStore(_conf).createSchema() ;
         return true ; 
     }
 
     @Override
-    public boolean deleteResource(Properties conf) throws IOException {
-        this.getDataStore(conf).deleteSchema() ;
+    public boolean deleteResource(Properties _conf) throws IOException {
+        this.getDataStore(_conf).deleteSchema() ;
         return true ;
     }
 
     @Override
-    public boolean resourceExists(Properties conf) throws IOException {
-        return this.getDataStore(conf).schemaExists() ;
+    public boolean resourceExists(Properties _conf) throws IOException {
+        return this.getDataStore(_conf).schemaExists() ;
     }
 
     @Override
-    public long getModifiedTime(Properties conf) throws IOException {
+    public long getModifiedTime(Properties _conf) throws IOException {
         return System.currentTimeMillis(); // currently unable to find last mod time on a table
     }
 
     @Override
     public TupleEntryIterator openForRead(FlowProcess<Properties> flowProcess, RecordReader input) throws IOException {
-        // Devolver el TupleEntryIterator que a su vez devolverá instancias TupleEntry (cada registro),
-        // que iterará sobre los resultados de un scan
-        // @param input puede ser null y habrá que crear una instancia de GoraRecordReader
-        
-        // Internamente, TupleEntryIterator necesitará un TupleEntrySchemeIterator
-        
-        //return new GoraTupleEntryIterator(this.getScheme(), input) ;
-        return new HadoopTupleEntrySchemeIterator(flowProcess, this, input) ;
+        return new GoraTupleEntryIterator(this.getScheme()) ;
     }
 
     @Override

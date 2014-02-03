@@ -1,8 +1,11 @@
 package org.apache.gora.cascading.tap;
 
 import java.io.IOException;
+import java.util.NoSuchElementException;
 
 import org.apache.hadoop.mapred.RecordReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cascading.scheme.Scheme;
 import cascading.tuple.Fields;
@@ -11,6 +14,8 @@ import cascading.tuple.TupleEntryIterator;
 
 public class GoraTupleEntryIterator extends TupleEntryIterator {
 
+    public static final Logger LOG = LoggerFactory.getLogger(GoraTupleEntryIterator.class);
+    
     private Scheme scheme ;
     private RecordReader recordReader ;
 
@@ -19,38 +24,40 @@ public class GoraTupleEntryIterator extends TupleEntryIterator {
     private Object nextKey ;
     private Object nextValue ;
     
-    public GoraTupleEntryIterator(Scheme scheme, RecordReader recordReader) {
-        this(Fields.ALL) ;
+    public GoraTupleEntryIterator(Scheme scheme) {
+        super(scheme.getSourceFields()) ;
         this.scheme = scheme ;
         this.recordReader = recordReader ;
     }
     
-    public GoraTupleEntryIterator(Fields fields) {
-        super(fields);
-        // TODO Auto-generated constructor stub
-    }
-
     @Override
     public boolean hasNext() {
-        // TODO Auto-generated method stub
-        return false ; //this.recordReader.next(this.nextKey, this.nextValue) ;
+        try {
+            return this.recordReader.next(this.nextKey, this.nextValue) ;
+        } catch (IOException e) {
+            this.nextKey = null ;
+            LOG.error("Error reading", e);
+            return false ;
+        }
     }
 
     @Override
     public TupleEntry next() {
+        if (this.nextKey == null) {
+            return new NoSuchElementException() ;
+        }
+        this.scheme.getSinkFields() ;
+        // TODO transforamr Value => tupla
         return null;
     }
 
     @Override
     public void remove() {
-        // TODO Auto-generated method stub
-        return ;
     }
 
     @Override
     public void close() throws IOException {
-        // TODO Auto-generated method stub
-        return ;
+        this.recordReader.close() ;
     }
 
 }
