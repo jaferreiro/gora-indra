@@ -1,4 +1,4 @@
-package org.apache.gora.cascading.tap;
+package org.apache.gora.cascading.tap.hadoop;
 
 import java.io.IOException;
 

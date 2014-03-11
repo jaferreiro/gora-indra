@@ -1,4 +1,5 @@
-package org.apache.gora.cascading.tap;
+package org.apache.gora.cascading.tap.hadoop;
+/*package org.apache.gora.cascading.tap;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -37,6 +38,9 @@ public class GoraTap extends Tap<JobConf, RecordReader, OutputCollector> {
     private Class<? extends Persistent> persistentClass;
     private Class<?> keyClass;
 
+    //BORRAR
+    GoraTupleEntryIterator borrar = null ;
+    
     // TODO transient?
     private DataStore<?, ? extends Persistent> dataStore ;
     private Query<?, ? extends Persistent> query ;
@@ -51,13 +55,13 @@ public class GoraTap extends Tap<JobConf, RecordReader, OutputCollector> {
         this.persistentClass = persistentClass ;
     }
 
-    /**
+    *//**
      * Retrieves the datastore
      * @param conf (Optional) Needed the first time the datastore is retrieves for this scheme.
      *             In subsequent calls is ignored since the datastore is taken from cache.
      * @return
      * @throws GoraException
-     */
+     *//*
     public DataStore<?, ? extends Persistent> getDataStore(JobConf conf) throws GoraException {
         if (this.dataStore == null) {
             this.dataStore = DataStoreFactory.getDataStore(this.keyClass, this.persistentClass, conf) ;
@@ -181,7 +185,7 @@ public class GoraTap extends Tap<JobConf, RecordReader, OutputCollector> {
         this.query = query ;
     }
     
-    /**
+    *//**
      * Generics funnel: Workaround for generics hassle. Executes GoraInputFormat.setInput() for a query and datastore on a job.
      * The query and datastore must be of the same generics types.
      * @param query 
@@ -190,7 +194,7 @@ public class GoraTap extends Tap<JobConf, RecordReader, OutputCollector> {
      * @param persistentClass
      * @param job Job configuration
      * @throws IOException
-     */
+     *//*
     @SuppressWarnings("unchecked")
     private <K1, V1 extends Persistent,
              K2, V2 extends Persistent,
@@ -199,7 +203,7 @@ public class GoraTap extends Tap<JobConf, RecordReader, OutputCollector> {
         GoraInputFormat.setInput(job, (Query<K,V>)query, (DataStore<K,V>)dataStore, false) ;
     }
     
-    /**
+    *//**
      * Merges configuration from the 'from' into the 'to'.
      * If a 'from' key exists in 'to', it is ignored.
      * If a 'from' key does not exists in 'to', it is added to 'to'.
@@ -207,7 +211,7 @@ public class GoraTap extends Tap<JobConf, RecordReader, OutputCollector> {
      * Workaround used to merge Job configuration into JobConf
      * @param from
      * @param to
-     */
+     *//*
     private void mergeConfigurationFromTo(Configuration from, Configuration to) {
         for(Entry<String,String> fromEntry: from) {
             if (to.get(fromEntry.getKey()) == null) {
@@ -217,3 +221,4 @@ public class GoraTap extends Tap<JobConf, RecordReader, OutputCollector> {
     }
 
 }
+*/
