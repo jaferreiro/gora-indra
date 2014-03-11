@@ -106,11 +106,8 @@ public class GoraLocalTap extends Tap<Properties, ResultBase, OutputCollector> {
         if (input != null) {
             return new TupleEntrySchemeIterator(flowProcess, this.getScheme(), input) ;
         }
-        
-        this.getScheme().
-        
-        
-        return new TupleEntrySchemeIterator(flowProcess,this.getScheme(),) ;
+        Query query = this.getScheme().createQuery(this) ;
+        return new TupleEntrySchemeIterator(flowProcess,this.getScheme(), query.execute()) ;
     }
 
     @SuppressWarnings("unchecked")
@@ -130,42 +127,6 @@ public class GoraLocalTap extends Tap<Properties, ResultBase, OutputCollector> {
     @Override
     public void sinkConfInit(FlowProcess<Properties> flowProcess, Properties conf) {
         super.sinkConfInit(flowProcess, conf);
-    }
-
-    /**
-     * Generics funnel: Workaround for generics hassle. Executes GoraInputFormat.setInput() for a query and datastore on a job.
-     * The query and datastore must be of the same generics types.
-     * @param query 
-     * @param dataStore
-     * @param keyClass
-     * @param persistentClass
-     * @param job Job configuration
-     * @throws IOException
-     */
-    @SuppressWarnings({ "unchecked", "unused" })
-    private <K1, V1 extends Persistent,
-             K2, V2 extends Persistent,
-             K, V extends Persistent>
-    void genericSetInput(Query<K1,V1> query, DataStore<K2,V2> dataStore, Class<K> keyClass, Class<V> persistentClass, Job job) throws IOException {
-        GoraInputFormat.setInput(job, (Query<K,V>)query, (DataStore<K,V>)dataStore, false) ;
-    }
-    
-    /**
-     * Merges configuration from the 'from' into the 'to'.
-     * If a 'from' key exists in 'to', it is ignored.
-     * If a 'from' key does not exists in 'to', it is added to 'to'.
-     * 
-     * Workaround used to merge Job configuration into JobConf
-     * @param from
-     * @param to
-     */
-    @SuppressWarnings("unused")
-    private void mergeConfigurationFromTo(Configuration from, Configuration to) {
-        for(Entry<String,String> fromEntry: from) {
-            if (to.get(fromEntry.getKey()) == null) {
-                to.set(fromEntry.getKey(), fromEntry.getValue()) ;
-            }
-        }
     }
 
 }
