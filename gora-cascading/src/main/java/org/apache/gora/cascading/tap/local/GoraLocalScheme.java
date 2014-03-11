@@ -10,9 +10,12 @@ import org.apache.gora.persistency.impl.PersistentBase;
 import org.apache.gora.query.Query;
 import org.apache.gora.query.impl.ResultBase;
 import org.apache.gora.store.DataStore;
+import org.apache.gora.util.GoraException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapreduce.Job;
+
+import com.google.common.collect.Iterables;
 
 import cascading.flow.FlowProcess;
 import cascading.scheme.Scheme;
@@ -100,7 +103,7 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
     }
 
     @SuppressWarnings("unchecked")
-    public Query<?,? extends Persistent> createQuery(GoraLocalTap tap) {
+    public Query<?,? extends Persistent> createQuery(GoraLocalTap tap) throws GoraException {
         
         Query query = tap.getDataStore(null).newQuery() ;
         
@@ -112,11 +115,10 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
             query.setLimit(this.queryLimit) ;
         
         if (this.getSourceFields().isDefined()) {
-            String[] fieldNames = (String []) this.getSourceFields().
-            query.setFields(null)
+            String[] fields = (String[]) Iterables.toArray(this.getSourceFields(), Object.class) ;
+            query.setFields(fields) ;
         }
-        
-        query.setFields(fieldNames) ;
+        return query ;
     }
     
     @Override
@@ -129,9 +131,6 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
     
     @Override
     public boolean source(FlowProcess<Properties> flowProcess, SourceCall<Object[], ResultBase> sourceCall) throws IOException {
-        String key = null ;
-        PersistentBase value = null ;
-        
         try {
             if (!sourceCall.getInput().next()) {
                 return false ;
@@ -143,8 +142,8 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
         
         Tuple tuple = sourceCall.getIncomingEntry().getTuple();
         tuple.clear();
-        tuple.addString(key) ;
-        tuple.add(value) ;
+        tuple.addString((String) sourceCall.getInput().getKey()) ;
+        tuple.add(sourceCall.getInput().get()) ;
         
         return true;
     }
