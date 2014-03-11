@@ -1,14 +1,15 @@
-package org.apache.gora.cascading.tap;
+package org.apache.gora.cascading.tap.local;
 
 import java.io.IOException;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.Map.Entry;
 
 import org.apache.gora.mapreduce.GoraInputFormat;
-import org.apache.gora.mapreduce.GoraOutputFormat;
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.query.Query;
+import org.apache.gora.query.Result;
+import org.apache.gora.query.impl.ResultBase;
 import org.apache.gora.store.DataStore;
 import org.apache.gora.store.DataStoreFactory;
 import org.apache.gora.util.GoraException;
@@ -18,19 +19,16 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapreduce.Job;
 
-import com.twitter.elephantbird.mapred.input.DeprecatedInputFormatWrapper;
-import com.twitter.elephantbird.mapred.output.DeprecatedOutputFormatWrapper;
-
 import cascading.flow.FlowProcess;
 import cascading.tap.SinkMode;
 import cascading.tap.Tap;
-import cascading.tap.hadoop.io.HadoopTupleEntrySchemeIterator;
-import cascading.tuple.Fields;
 import cascading.tuple.TupleEntryCollector;
 import cascading.tuple.TupleEntryIterator;
+import cascading.tuple.TupleEntrySchemeCollector;
+import cascading.tuple.TupleEntrySchemeIterator;
 
 @SuppressWarnings({ "rawtypes" })
-public class GoraLocalTap extends Tap<Properties, RecordReader, OutputCollector> {
+public class GoraLocalTap extends Tap<Properties, ResultBase, OutputCollector> {
 
     // TODO Change this to something decent. Does this identifier affects optimizations of Taps usage?
     private final String tapId = UUID.randomUUID().toString() ;
@@ -40,7 +38,6 @@ public class GoraLocalTap extends Tap<Properties, RecordReader, OutputCollector>
 
     // TODO transient?
     private DataStore<?, ? extends Persistent> dataStore ;
-    private Query<?, ? extends Persistent> query ;
     
     // HBase/HDFS configuration
     private JobConf jobConfiguration ;
@@ -103,19 +100,26 @@ public class GoraLocalTap extends Tap<Properties, RecordReader, OutputCollector>
         return System.currentTimeMillis(); // currently unable to find last mod time on a table
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public TupleEntryIterator openForRead(FlowProcess<Properties> flowProcess, RecordReader input) throws IOException {
-        return new GoraTupleEntryIterator(this.getScheme()) ;
+    public TupleEntryIterator openForRead(FlowProcess<Properties> flowProcess, ResultBase input) throws IOException {
+        if (input != null) {
+            return new TupleEntrySchemeIterator(flowProcess, this.getScheme(), input) ;
+        }
+        
+        this.getScheme().
+        
+        
+        return new TupleEntrySchemeIterator(flowProcess,this.getScheme(),) ;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public TupleEntryCollector openForWrite(FlowProcess<Properties> flowProcess, OutputCollector output) throws IOException {
         // Devolver un TupleEntryCollector que se recibirá instancias TupleEntry/Tuple para ir grabando.
         // @param output puede ser null y habrá que crear una instancia de GoraRecordWriter
 
-        GoraTupleEntrySchemeCollector goraTupleCollector = new GoraTupleEntrySchemeCollector(flowProcess, this) ;
-        goraTupleCollector.prepare() ;
-        return goraTupleCollector ;
+        return new TupleEntrySchemeCollector(flowProcess, this.getScheme(), output) ;
     }
 
     @Override
@@ -128,11 +132,6 @@ public class GoraLocalTap extends Tap<Properties, RecordReader, OutputCollector>
         super.sinkConfInit(flowProcess, conf);
     }
 
-    @SuppressWarnings("unchecked")
-    public void setQuery(Query query) {
-        this.query = query ;
-    }
-    
     /**
      * Generics funnel: Workaround for generics hassle. Executes GoraInputFormat.setInput() for a query and datastore on a job.
      * The query and datastore must be of the same generics types.
@@ -143,7 +142,7 @@ public class GoraLocalTap extends Tap<Properties, RecordReader, OutputCollector>
      * @param job Job configuration
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "unused" })
     private <K1, V1 extends Persistent,
              K2, V2 extends Persistent,
              K, V extends Persistent>
@@ -160,6 +159,7 @@ public class GoraLocalTap extends Tap<Properties, RecordReader, OutputCollector>
      * @param from
      * @param to
      */
+    @SuppressWarnings("unused")
     private void mergeConfigurationFromTo(Configuration from, Configuration to) {
         for(Entry<String,String> fromEntry: from) {
             if (to.get(fromEntry.getKey()) == null) {

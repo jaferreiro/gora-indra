@@ -1,4 +1,5 @@
-package org.apache.gora.cascading.tap;
+package org.apache.gora.cascading.tap.local;
+/*package org.apache.gora.cascading.tap;
 
 import java.io.IOException;
 import java.util.NoSuchElementException;
@@ -12,7 +13,7 @@ import cascading.tuple.Fields;
 import cascading.tuple.TupleEntry;
 import cascading.tuple.TupleEntryIterator;
 
-public class GoraTupleEntryIterator extends TupleEntryIterator {
+public class GoraLocalTupleEntryIterator extends TupleEntryIterator {
 
     public static final Logger LOG = LoggerFactory.getLogger(GoraTupleEntryIterator.class);
     
@@ -24,10 +25,10 @@ public class GoraTupleEntryIterator extends TupleEntryIterator {
     private Object nextKey ;
     private Object nextValue ;
     
-    public GoraTupleEntryIterator(Scheme scheme) {
+    public GoraLocalTupleEntryIterator(GoraLocalTap tap, Scheme scheme) {
         super(scheme.getSourceFields()) ;
         this.scheme = scheme ;
-        this.recordReader = recordReader ;
+        this.recordReader =  tap.getDataStore(null);
     }
     
     @Override
@@ -61,3 +62,4 @@ public class GoraTupleEntryIterator extends TupleEntryIterator {
     }
 
 }
+*/

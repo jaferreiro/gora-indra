@@ -10,7 +10,7 @@
         <family name="family2"  maxVersions="1" />
     </table>
 
-    <class table="test" keyClass="java.lang.String" name="es.indra.innovationlabs.celtic.ormgoratypes.tests.storage.TestRow">
+    <class table="test" keyClass="java.lang.String" name="org.apache.gora.cascading.test.storage.TestRow">
         <field name="defaultLong1"      family="family1" qualifier="defaultLong1"    />
         <field name="defaultStringEmpty" family="family1" qualifier="defaultStringEmpty"    />
         <field name="unionString"       family="family1" qualifier="unionString"    />

@@ -3,6 +3,7 @@ package org.apache.gora.cascading;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.gora.cascading.tap.local.GoraLocalScheme;
@@ -25,6 +26,7 @@ import org.junit.Test;
 
 import cascading.flow.Flow;
 import cascading.flow.FlowConnector;
+import cascading.flow.hadoop.HadoopFlowConnector;
 import cascading.flow.local.LocalFlowConnector;
 import cascading.operation.Identity;
 import cascading.pipe.Each;
@@ -33,14 +35,16 @@ import cascading.property.AppProps;
 import cascading.tap.Tap;
 import cascading.tuple.TupleEntryIterator;
 
-public class CopiaLocalTest {
+import com.google.common.collect.Maps;
 
-    /** The configuration */
-    protected static Configuration configuration;
+public class CopiaTest {
+
+    /** The configuration. */
+    protected static Configuration     configuration;
 
     private static HBaseTestingUtility utility;
 
-    public CopiaLocalTest() {
+    public CopiaTest() {
     }
 
     @BeforeClass
@@ -56,6 +60,17 @@ public class CopiaLocalTest {
         utility.shutdownMiniCluster();
     }
 
+    public FlowConnector createHadoopFlowConnector() {
+        return createHadoopFlowConnector(Maps.newHashMap());
+    }
+
+    public FlowConnector createHadoopFlowConnector(Map<Object, Object> props) {
+        Map<Object, Object> finalProperties = Maps.newHashMap(props);
+        //finalProperties.put(HConstants.ZOOKEEPER_CLIENT_PORT, utility.getZkCluster().getClientPort());
+
+        return new HadoopFlowConnector(finalProperties);
+    }
+
     protected static void deleteTable(Configuration configuration, String tableName) throws IOException {
         HBaseAdmin hbase = new HBaseAdmin(configuration);
         if (hbase.tableExists(Bytes.toBytes(tableName))) {
@@ -65,7 +80,7 @@ public class CopiaLocalTest {
         //hbase.close();
     }
 
-    protected void verifySink(Flow<?> flow, int expects) throws IOException {
+    protected void verifySink(Flow flow, int expects) throws IOException {
         int count = 0;
 
         TupleEntryIterator iterator = flow.openSink();
@@ -101,7 +116,7 @@ public class CopiaLocalTest {
 
     @Before
     public void before() throws GoraException {
-        DataStore<String, TestRow> dataStore = DataStoreFactory.getDataStore(String.class, TestRow.class, CopiaLocalTest.configuration);
+        DataStore<String, TestRow> dataStore = DataStoreFactory.getDataStore(String.class, TestRow.class, new Configuration());
         TestRow t = dataStore.newPersistent();
         t.setDefaultLong1(2); // Campo obligatorio
         t.setDefaultStringEmpty("a"); //Campo obligatorio
@@ -122,20 +137,18 @@ public class CopiaLocalTest {
     public void copiar() throws IOException {
 
         Properties properties = new Properties();
-        AppProps.setApplicationJarClass(properties, CopiaLocalTest.class);
+        AppProps.setApplicationJarClass(properties, CopiaTest.class);
 
         deleteTable(configuration, "test");
 
         GoraLocalScheme esquema = new GoraLocalScheme() ;
-        
-        //esquema.setQueryStartKey(queryStartKey) ;
-        
+        //esquema.setQuery(query) ;
         Tap<?, ?, ?> origen = new GoraLocalTap(String.class, TestRow.class, esquema) ;
         Tap<?, ?, ?> destino = new GoraLocalTap(String.class, TestRow.class, esquema) ;
 
         Pipe copyPipe = new Each("read", new Identity());
         FlowConnector flowConnector = new LocalFlowConnector() ;
-        Flow<?> copyFlow = flowConnector.connect(origen, destino, copyPipe);
+        Flow copyFlow = flowConnector.connect(origen, destino, copyPipe);
 
         copyFlow.complete();
 
