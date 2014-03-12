@@ -8,6 +8,7 @@ import java.util.Properties;
 import org.apache.gora.cascading.tap.local.GoraLocalScheme;
 import org.apache.gora.cascading.tap.local.GoraLocalTap;
 import org.apache.gora.cascading.test.storage.TestRow;
+import org.apache.gora.cascading.util.ConfigurationUtil;
 import org.apache.gora.store.DataStore;
 import org.apache.gora.store.DataStoreFactory;
 import org.apache.gora.util.GoraException;
@@ -62,7 +63,6 @@ public class CopiaLocalTest {
             hbase.disableTable(Bytes.toBytes(tableName));
             hbase.deleteTable(Bytes.toBytes(tableName));
         }
-        //hbase.close();
     }
 
     protected void verifySink(Flow<?> flow, int expects) throws IOException {
@@ -121,20 +121,21 @@ public class CopiaLocalTest {
     @Test
     public void copiar() throws IOException {
 
-        Properties properties = new Properties();
+        Properties properties = ConfigurationUtil.toRawProperties(CopiaLocalTest.configuration) ;
         AppProps.setApplicationJarClass(properties, CopiaLocalTest.class);
-
-        deleteTable(configuration, "test");
+        CopiaLocalTest.configuration = ConfigurationUtil.toConfiguration(properties) ;
+        
+        //deleteTable(configuration, "test");
 
         GoraLocalScheme esquema = new GoraLocalScheme() ;
         
         //esquema.setQueryStartKey(queryStartKey) ;
         
-        Tap<?, ?, ?> origen = new GoraLocalTap(String.class, TestRow.class, esquema) ;
-        Tap<?, ?, ?> destino = new GoraLocalTap(String.class, TestRow.class, esquema) ;
+        Tap<?, ?, ?> origen = new GoraLocalTap(String.class, TestRow.class, esquema, CopiaLocalTest.configuration) ;
+        Tap<?, ?, ?> destino = new GoraLocalTap(String.class, TestRow.class, esquema, CopiaLocalTest.configuration) ;
 
         Pipe copyPipe = new Each("read", new Identity());
-        FlowConnector flowConnector = new LocalFlowConnector() ;
+        FlowConnector flowConnector = new LocalFlowConnector(properties) ;
         Flow<?> copyFlow = flowConnector.connect(origen, destino, copyPipe);
 
         copyFlow.complete();

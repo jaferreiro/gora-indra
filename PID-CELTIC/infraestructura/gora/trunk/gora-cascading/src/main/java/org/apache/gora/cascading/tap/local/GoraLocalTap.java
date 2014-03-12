@@ -1,14 +1,11 @@
 package org.apache.gora.cascading.tap.local;
 
 import java.io.IOException;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.UUID;
 
-import org.apache.gora.mapreduce.GoraInputFormat;
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.query.Query;
-import org.apache.gora.query.Result;
 import org.apache.gora.query.impl.ResultBase;
 import org.apache.gora.store.DataStore;
 import org.apache.gora.store.DataStoreFactory;
@@ -16,8 +13,6 @@ import org.apache.gora.util.GoraException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.RecordReader;
-import org.apache.hadoop.mapreduce.Job;
 
 import cascading.flow.FlowProcess;
 import cascading.tap.SinkMode;
@@ -45,14 +40,22 @@ public class GoraLocalTap extends Tap<Properties, ResultBase, OutputCollector> {
     public GoraLocalTap (Class<?> keyClass, Class<? extends Persistent> persistentClass, GoraLocalScheme scheme) {
         this(keyClass, persistentClass, scheme, SinkMode.KEEP) ;
     }
-    
-    public GoraLocalTap (Class<?> keyClass, Class<? extends Persistent> persistentClass, GoraLocalScheme scheme, SinkMode sinkMode) {
+
+    public GoraLocalTap (Class<?> keyClass, Class<? extends Persistent> persistentClass, GoraLocalScheme scheme, Configuration configuration) {
+        this(keyClass, persistentClass, scheme, SinkMode.KEEP, configuration) ;
+    }
+
+    public GoraLocalTap (Class<?> keyClass, Class<? extends Persistent> persistentClass, GoraLocalScheme scheme, SinkMode sinkMode, Configuration configuration) {
         super(scheme, sinkMode) ;
         this.keyClass = keyClass ;
         this.persistentClass = persistentClass ;
-        this.jobConfiguration = new JobConf(new Configuration()) ;
+        this.jobConfiguration = new JobConf(configuration) ;
     }
 
+    public GoraLocalTap (Class<?> keyClass, Class<? extends Persistent> persistentClass, GoraLocalScheme scheme, SinkMode sinkMode) {
+        this(keyClass, persistentClass, scheme, sinkMode, new Configuration()) ;
+    }
+    
     /**
      * Retrieves the datastore
      * @param _conf Ignored properties configuration, since the configuration needed for the dataStore is taken from gora.properties and from *-site.xml(Hadoop)
@@ -107,7 +110,8 @@ public class GoraLocalTap extends Tap<Properties, ResultBase, OutputCollector> {
             return new TupleEntrySchemeIterator(flowProcess, this.getScheme(), input) ;
         }
         Query query = this.getScheme().createQuery(this) ;
-        return new TupleEntrySchemeIterator(flowProcess,this.getScheme(), query.execute()) ;
+//        return new TupleEntrySchemeIterator(flowProcess, this.getScheme(), new CloseableResult(query.execute())) ;
+        return new TupleEntrySchemeIterator(flowProcess, this.getScheme(), new CloseableResultIterator(query.execute())) ;
     }
 
     @SuppressWarnings("unchecked")
