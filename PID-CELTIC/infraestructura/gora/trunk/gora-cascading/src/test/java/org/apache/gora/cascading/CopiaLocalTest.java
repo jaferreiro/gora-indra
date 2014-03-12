@@ -8,6 +8,7 @@ import java.util.Properties;
 import org.apache.gora.cascading.tap.local.GoraLocalScheme;
 import org.apache.gora.cascading.tap.local.GoraLocalTap;
 import org.apache.gora.cascading.test.storage.TestRow;
+import org.apache.gora.cascading.test.storage.TestRowDest;
 import org.apache.gora.cascading.util.ConfigurationUtil;
 import org.apache.gora.store.DataStore;
 import org.apache.gora.store.DataStoreFactory;
@@ -65,19 +66,25 @@ public class CopiaLocalTest {
         }
     }
 
-    protected void verifySink(Flow<?> flow, int expects) throws IOException {
-        int count = 0;
+    protected void verifySink(Flow<?> flow, int expects) throws Exception {
 
-        TupleEntryIterator iterator = flow.openSink();
-
-        while (iterator.hasNext()) {
-            count++;
-            System.out.println("iterator.next() = " + iterator.next());
+        DataStore<String, TestRowDest> dataStore = DataStoreFactory.getDataStore(String.class, TestRowDest.class, CopiaLocalTest.configuration);
+        org.apache.gora.query.Result<String,TestRowDest> resultDest = dataStore.newQuery().execute() ;
+        
+        int numResults = 0 ;
+        while (resultDest.next()) {
+            numResults++ ;
+            System.out.println("key=" + resultDest.getKey()) ;
+            if (resultDest.getKey().equals("1")) {
+                TestRowDest persistent = resultDest.get() ;
+                assertEquals(2, persistent.getDefaultLong1()) ;
+                assertEquals("a", persistent.getDefaultStringEmpty().toString()) ;
+                assertEquals(10, persistent.getColumnLong().longValue()) ;
+            }
         }
 
-        iterator.close();
+        assertEquals("Wrong number of records written", 2, numResults) ;
 
-        assertEquals("wrong number of values in " + flow.getSink().toString(), expects, count);
     }
 
     protected void verify(String tableName, String family, String charCol, int expected) throws IOException {
@@ -119,7 +126,7 @@ public class CopiaLocalTest {
     }
 
     @Test
-    public void copiar() throws IOException {
+    public void copiar() throws Exception {
 
         Properties properties = ConfigurationUtil.toRawProperties(CopiaLocalTest.configuration) ;
         AppProps.setApplicationJarClass(properties, CopiaLocalTest.class);
@@ -132,15 +139,15 @@ public class CopiaLocalTest {
         //esquema.setQueryStartKey(queryStartKey) ;
         
         Tap<?, ?, ?> origen = new GoraLocalTap(String.class, TestRow.class, esquema, CopiaLocalTest.configuration) ;
-        Tap<?, ?, ?> destino = new GoraLocalTap(String.class, TestRow.class, esquema, CopiaLocalTest.configuration) ;
+        Tap<?, ?, ?> destino = new GoraLocalTap(String.class, TestRowDest.class, esquema, CopiaLocalTest.configuration) ;
 
         Pipe copyPipe = new Each("read", new Identity());
         FlowConnector flowConnector = new LocalFlowConnector(properties) ;
         Flow<?> copyFlow = flowConnector.connect(origen, destino, copyPipe);
 
         copyFlow.complete();
-
-        verifySink(copyFlow, 5);
+        
+        verifySink(copyFlow, 2);
 
     }
 }

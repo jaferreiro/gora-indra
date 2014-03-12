@@ -1,21 +1,17 @@
 package org.apache.gora.cascading.tap.local;
 
 import java.io.IOException;
-import java.util.Map.Entry;
 import java.util.Properties;
 
-import org.apache.gora.mapreduce.GoraInputFormat;
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.persistency.impl.PersistentBase;
 import org.apache.gora.query.Query;
 import org.apache.gora.query.impl.ResultBase;
 import org.apache.gora.store.DataStore;
 import org.apache.gora.util.GoraException;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapreduce.Job;
-
-import com.google.common.collect.Iterables;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cascading.flow.FlowProcess;
 import cascading.scheme.Scheme;
@@ -24,18 +20,26 @@ import cascading.scheme.SourceCall;
 import cascading.tap.Tap;
 import cascading.tuple.Fields;
 import cascading.tuple.Tuple;
+import cascading.tuple.TupleEntry;
+
+import com.google.common.collect.Iterables;
 
 @SuppressWarnings("rawtypes")
 public class GoraLocalScheme extends Scheme<Properties,  // Config
                                        ResultBase,       // Input
-                                       OutputCollector,  // Output
+                                       DataStore,        // Output
                                        Object[],         // SourceContext
-                                       Object[]> {       // SinkContext
-
+                                       Object[]>         // SinkContext
+{
+    public static final Logger LOG = LoggerFactory.getLogger(GoraLocalScheme.class);
+                                           
     Object queryStartKey ;
     Object queryEndKey ;
     Long queryLimit ;
-                                           
+
+    /** Special Fields for retrieving all the instance */
+    public static final Fields keyAndPersistent = new Fields ("key", "persistent") ;
+    
     private static final long serialVersionUID = 1L;
 
     public GoraLocalScheme() {
@@ -76,6 +80,9 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
      */
     public GoraLocalScheme(Fields sourceFields, Fields sinkFields, int numSinkParts) {
         super(sourceFields, sinkFields, numSinkParts);
+        if (sourceFields.isAll()) {
+            this.setSourceFields(GoraLocalScheme.keyAndPersistent) ;
+        }
     }
 
     public Object getQueryStartKey() {
@@ -114,7 +121,7 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
         if (this.queryLimit != null)
             query.setLimit(this.queryLimit) ;
         
-        if (this.getSourceFields().isDefined()) {
+        if (this.getSourceFields().isDefined() && !this.getSourceFields().equalsFields(GoraLocalScheme.keyAndPersistent)) {
             String[] fields = (String[]) Iterables.toArray(this.getSourceFields(), Object.class) ;
             query.setFields(fields) ;
         }
@@ -122,11 +129,11 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
     }
     
     @Override
-    public void sourceConfInit(FlowProcess<Properties> flowProcess, Tap<Properties, ResultBase, OutputCollector> tap, Properties propsConf) {
+    public void sourceConfInit(FlowProcess<Properties> flowProcess, Tap<Properties, ResultBase, DataStore> tap, Properties propsConf) {
     }
 
     @Override
-    public void sinkConfInit(FlowProcess<Properties> flowProcess, Tap<Properties, ResultBase, OutputCollector> tap, Properties propsConf) {
+    public void sinkConfInit(FlowProcess<Properties> flowProcess, Tap<Properties, ResultBase, DataStore> tap, Properties propsConf) {
     }
     
     @Override
@@ -141,22 +148,32 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
         }
         
         Tuple tuple = sourceCall.getIncomingEntry().getTuple();
-        tuple.clear();
-        tuple.addString((String) sourceCall.getInput().getKey()) ;
-        tuple.add(sourceCall.getInput().get()) ;
+
+        Fields fields = sourceCall.getIncomingEntry().getFields() ;
+        if (fields.equalsFields(GoraLocalScheme.keyAndPersistent)) {
+            tuple.clear();
+            tuple.addString((String) sourceCall.getInput().getKey()) ;
+            tuple.add(sourceCall.getInput().get()) ;
+        }
         
         return true;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public void sink(FlowProcess<Properties> flowProcess, SinkCall<Object[], OutputCollector> sinkCall) throws IOException {
-        Fields fields = sinkCall.getOutgoingEntry().getFields() ;
+    public void sink(FlowProcess<Properties> flowProcess, SinkCall<Object[], DataStore> sinkCall) throws IOException {
+        TupleEntry tupleEntry = sinkCall.getOutgoingEntry() ;
+        Fields fields = tupleEntry.getFields() ;
 
-        String key = (String)fields.get(0) ;
-        PersistentBase persistent = (PersistentBase) fields.get(1) ;
+        if (fields.equalsFields(GoraLocalScheme.keyAndPersistent)) {
+            // Tupla (key, Persistent)
+            String key = tupleEntry.getString("key") ;
+            Persistent persistent = (Persistent) tupleEntry.getObject("persistent") ;
+persistent.setDirty() ;
+            sinkCall.getOutput().put(key, persistent) ;
+            sinkCall.getOutput().flush() ;
+        }
 
-        sinkCall.getOutput().collect(key, persistent) ;
     }
     
 }

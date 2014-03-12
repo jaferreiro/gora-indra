@@ -13,6 +13,9 @@ import org.apache.gora.util.GoraException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputCollector;
+import org.eclipse.jdt.core.dom.ThisExpression;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cascading.flow.FlowProcess;
 import cascading.tap.SinkMode;
@@ -23,7 +26,10 @@ import cascading.tuple.TupleEntrySchemeCollector;
 import cascading.tuple.TupleEntrySchemeIterator;
 
 @SuppressWarnings({ "rawtypes" })
-public class GoraLocalTap extends Tap<Properties, ResultBase, OutputCollector> {
+public class GoraLocalTap extends Tap<Properties, ResultBase, DataStore> {
+
+    /** Field LOG */
+    public static final Logger LOG = LoggerFactory.getLogger(GoraLocalTap.class);
 
     // TODO Change this to something decent. Does this identifier affects optimizations of Taps usage?
     private final String tapId = UUID.randomUUID().toString() ;
@@ -116,15 +122,16 @@ public class GoraLocalTap extends Tap<Properties, ResultBase, OutputCollector> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public TupleEntryCollector openForWrite(FlowProcess<Properties> flowProcess, OutputCollector output) throws IOException {
+    public TupleEntryCollector openForWrite(FlowProcess<Properties> flowProcess, DataStore output) throws IOException {
         // Devolver un TupleEntryCollector que se recibirá instancias TupleEntry/Tuple para ir grabando.
         // @param output puede ser null y habrá que crear una instancia de GoraRecordWriter
 
-        return new TupleEntrySchemeCollector(flowProcess, this.getScheme(), output) ;
+        return new TupleEntrySchemeCollector(flowProcess, this.getScheme(), this.getDataStore(null)) ;
     }
 
     @Override
     public void sourceConfInit(FlowProcess<Properties> flowProcess, Properties propsConf) {
+        LOG.debug("sourcing from k-v: {}-{}", this.keyClass.getName(), this.persistentClass.getName()) ;
         super.sourceConfInit(flowProcess, propsConf);
     }
 
