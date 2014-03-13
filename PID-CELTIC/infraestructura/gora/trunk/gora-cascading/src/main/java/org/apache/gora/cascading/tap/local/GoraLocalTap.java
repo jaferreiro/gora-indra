@@ -12,8 +12,6 @@ import org.apache.gora.store.DataStoreFactory;
 import org.apache.gora.util.GoraException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.OutputCollector;
-import org.eclipse.jdt.core.dom.ThisExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,7 +114,6 @@ public class GoraLocalTap extends Tap<Properties, ResultBase, DataStore> {
             return new TupleEntrySchemeIterator(flowProcess, this.getScheme(), input) ;
         }
         Query query = this.getScheme().createQuery(this) ;
-//        return new TupleEntrySchemeIterator(flowProcess, this.getScheme(), new CloseableResult(query.execute())) ;
         return new TupleEntrySchemeIterator(flowProcess, this.getScheme(), new CloseableResultIterator(query.execute())) ;
     }
 
