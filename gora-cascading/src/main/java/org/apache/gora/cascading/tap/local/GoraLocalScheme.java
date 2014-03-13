@@ -19,6 +19,7 @@ import cascading.scheme.SinkCall;
 import cascading.scheme.SourceCall;
 import cascading.tap.Tap;
 import cascading.tuple.Fields;
+import cascading.tuple.FieldsResolverException;
 import cascading.tuple.Tuple;
 import cascading.tuple.TupleEntry;
 
@@ -169,7 +170,7 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
      * PersistentBase. Will only save the fields set in sinkFields.
      * 
      * If the tuple has not exactly ("key","persistent") fields, a PersistentBase object will
-     * be created, populated with sinkFields values and persisted.
+     * be created, populated with sinkFields values present in the TupleEntry and persisted.
      * 
      */
     @SuppressWarnings("unchecked")
@@ -177,6 +178,7 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
     public void sink(FlowProcess<Properties> flowProcess, SinkCall<Object[], DataStore> sinkCall) throws IOException {
         TupleEntry tupleEntry = sinkCall.getOutgoingEntry() ;
         Fields fieldsInTuple = tupleEntry.getFields() ; // Received fields to save
+        Fields sinkFields = this.getSinkFields() ;
 
         String key = tupleEntry.getString("key") ;
 
@@ -189,7 +191,8 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
                 persistent.setDirty() ;
             } else {
                 persistent.clearDirty() ;
-                Iterator sinkFieldsIterator = this.getSinkFields().iterator() ;
+                // Set dirty the sink fields of the Persistent instance
+                Iterator sinkFieldsIterator = sinkFields.iterator() ;
                 while (sinkFieldsIterator.hasNext()) {
                     String fieldName = (String) sinkFieldsIterator.next() ;
                     // TODO: Maybe log warn when a field does not exist? (but slower)
@@ -204,17 +207,26 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
             
             PersistentBase newOutputPersistent = (PersistentBase) sinkCall.getOutput().newPersistent() ;
 
-            Iterator fieldsNameIterator = fieldsInTuple.iterator() ;
-            while (fieldsNameIterator.hasNext()) {
-                String fieldName = (String) fieldsNameIterator.next() ;
-                // Copy into persistent
-                // Automatically sets dirty bits in Persistent for the field
+            Iterator fieldsInTupleNameIterator = fieldsInTuple.iterator() ;
+            while (fieldsInTupleNameIterator.hasNext()) {
+                String fieldName = (String) fieldsInTupleNameIterator.next() ;
+                if (fieldName.equals("key")) continue ;
                 try {
-                    int fieldIndex = newOutputPersistent.getFieldIndex(fieldName) ;
-                    newOutputPersistent.put(fieldIndex, tupleEntry.getObject(fieldName)) ;
+                    // Check if the field of the tuple exist in the sinkFields declared in constructor
+                    sinkFields.getPos(fieldName) ;
+                    // if reach here, exist (else will throw FieldsResolverException
+                    
+                    // Copy into persistent
+                    // Automatically sets dirty bits in Persistent for the field
+                    int indexInPersistent = newOutputPersistent.getFieldIndex(fieldName) ;
+                    newOutputPersistent.put(indexInPersistent, tupleEntry.getObject(fieldName)) ;
+                
+                } catch(FieldsResolverException e) {
+                    LOG.warn("Field <" + fieldName + "> not found in sink class " + newOutputPersistent.getClass().getName()) ;
                 } catch (NullPointerException e) {
                     LOG.warn("Field <" + fieldName + "> not found in sink class " + newOutputPersistent.getClass().getName()) ;
                 }
+                
             }
             sinkCall.getOutput().put(key, newOutputPersistent) ;
             
