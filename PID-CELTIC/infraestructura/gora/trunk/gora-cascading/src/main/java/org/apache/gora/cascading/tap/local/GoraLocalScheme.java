@@ -62,7 +62,7 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
      * @param sumSinkParts {@link Scheme}
      */
     public GoraLocalScheme(Fields sourceFields, int numSinkParts) {
-        this(sourceFields, /*sink fields*/ null, numSinkParts) ;
+        this(sourceFields, /*sink fields*/ Fields.ALL, numSinkParts) ;
     }
 
     /**
