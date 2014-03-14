@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Properties;
 
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Type;
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.persistency.impl.PersistentBase;
 import org.apache.gora.query.Query;
@@ -20,7 +22,6 @@ import cascading.scheme.SourceCall;
 import cascading.tap.Tap;
 import cascading.tuple.Fields;
 import cascading.tuple.FieldsResolverException;
-import cascading.tuple.Tuple;
 import cascading.tuple.TupleEntry;
 
 import com.google.common.collect.Iterables;
@@ -144,22 +145,137 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
                 return false ;
             }
         } catch (Exception e) {
-            // TODO: spit to log
+            LOG.error("Error reading next input tuple", e) ;
             throw new IOException(e) ;
         }
         
-        Tuple tuple = sourceCall.getIncomingEntry().getTuple();
+        TupleEntry tupleEntry = sourceCall.getIncomingEntry() ;
+        Fields tupleFields = tupleEntry.getFields() ;
+        PersistentBase persistent = (PersistentBase) sourceCall.getInput().get() ;
 
-        Fields fields = sourceCall.getIncomingEntry().getFields() ;
-        if (fields.equalsFields(GoraLocalScheme.keyAndPersistent)) {
-            tuple.clear();
-            tuple.addString((String) sourceCall.getInput().getKey()) ;
-            tuple.add(sourceCall.getInput().get()) ;
+        tupleEntry.setString("key", (String) sourceCall.getInput().getKey()) ;
+        
+        // When the scheme is ("key", "persistent") the second field will be the Persistent instance 
+        if (tupleFields.equalsFields(GoraLocalScheme.keyAndPersistent)) {
+            tupleEntry.setObject("persistent", persistent) ;
+        } else {
+            // scheme = ("key", "field", "field", ...)
+            Iterator sourceFields = this.getSourceFields().iterator() ;
+            while (sourceFields.hasNext()) {
+                String tupleFieldName = (String) sourceFields.next() ;
+                if (!sourceFields.equals("key")) {
+                    setTupleFieldFromPersistent(persistent, tupleEntry, tupleFieldName) ;
+                }
+            }
+
         }
         
         return true;
     }
 
+    /**
+     * Given a PersistentBase instance, takes the value from its field specified in "tupleFieldName"
+     *  and saves it to the tuple with the same field name.
+     *  
+     * @param persistent
+     * @param tupleEntry
+     * @param tupleFieldName
+     */
+    private void setTupleFieldFromPersistent(PersistentBase persistent, TupleEntry tupleEntry, String tupleFieldName) {
+        try {
+            int persistentFieldIndex = persistent.getFieldIndex(tupleFieldName) ; // NPE if field name noes not exist in Persistent instance
+            Object value = persistent.get(persistentFieldIndex) ;
+            Schema avroSchema = persistent.getSchema().getField(tupleFieldName).schema() ; // avro schema
+            this.setTupleFieldFromPersistent(avroSchema, value, tupleEntry, tupleFieldName) ;
+        } catch(NullPointerException e) {
+            LOG.warn("Field <" + tupleFieldName + "> not found in source class " + persistent.getClass().toString()) ;
+        }
+    }
+        
+    /**
+     * Given a value with an avro schema, saves that value in the tuple field specified by tupleFieldName. 
+     * @param persistent
+     * @param value
+     * @param tupleEntry
+     * @param tupleFieldName
+     */
+    private void setTupleFieldFromPersistent(Schema avroSchema, Object value, TupleEntry tupleEntry, String tupleFieldName) {
+        
+        switch(avroSchema.getType()) {
+            
+            case UNION:
+                // XXX Special case: When reading the top-level field of a record we must handle the
+                // special case ["null","type"] definitions: this will be written as if it was ["type"]
+                // if not in a special case, will execute "case RECORD".
+                
+                // if 'val' is empty we ignore the special case (will match Null in "case RECORD")  
+                if (avroSchema.getTypes().size() == 2) {
+                  
+                  // schema [type0, type1]
+                  Type type0 = avroSchema.getTypes().get(0).getType() ;
+                  Type type1 = avroSchema.getTypes().get(1).getType() ;
+                  
+                  // Check if types are different and there's a "null", like ["null","type"] or ["type","null"]
+                  if (!type0.equals(type1)
+                      && (   type0.equals(Schema.Type.NULL)
+                          || type1.equals(Schema.Type.NULL))) {
+
+                    if (type0.equals(Schema.Type.NULL))
+                        avroSchema = avroSchema.getTypes().get(1) ;
+                    else 
+                        avroSchema = avroSchema.getTypes().get(0) ;
+                    this.setTupleFieldFromPersistentWithoutUnion(avroSchema, value, tupleEntry, tupleFieldName) ;
+                  }
+                }
+
+                // else, save as object without information (duplicated sentence, but clearer)
+                this.setTupleFieldFromPersistentWithoutUnion(avroSchema, value, tupleEntry, tupleFieldName) ;
+                break ;
+                
+            default :
+                this.setTupleFieldFromPersistentWithoutUnion(avroSchema, value, tupleEntry, tupleFieldName) ;
+        }
+
+    }
+    
+    /**
+     * Copy a value given its avroSchema to the TypleEntry(tupleFieldName).
+     * Unknown entries (NULL and UNION) as Object type.
+     * 
+     * @param avroSchema An Avro Schema of the field from the Persistent instance
+     * @param value
+     * @param tupleEntry
+     * @param tupleFieldName
+     */
+    private void setTupleFieldFromPersistentWithoutUnion(Schema avroSchema, Object value, TupleEntry tupleEntry, String tupleFieldName) {
+        switch (avroSchema.getType()) {
+            case ARRAY:
+            case RECORD:
+            case MAP:
+            case FIXED:
+            case ENUM: 
+            case BYTES: tupleEntry.setObject(tupleFieldName, value) ;
+                break;
+            case BOOLEAN: tupleEntry.setBoolean(tupleFieldName, (Boolean) value) ;
+                break;
+            case DOUBLE: tupleEntry.setDouble(tupleFieldName, (Double) value) ;
+                break;
+            case FLOAT: tupleEntry.setFloat(tupleFieldName, (Float) value) ;
+                break;
+            case INT: tupleEntry.setInteger(tupleFieldName, (Integer) value) ;
+                break;
+            case LONG: tupleEntry.setLong(tupleFieldName, (Long) value) ;
+                break;
+            case STRING: tupleEntry.setString(tupleFieldName, (String) value) ;
+                break;
+            case NULL: tupleEntry.setObject(tupleFieldName, value) ;
+                break;
+            case UNION: tupleEntry.setObject(tupleFieldName, value) ;
+                break;
+        }
+        
+    }
+    
     /**
      * Saves the tuple in sinbkCall.getOutgoingEntry()
      * 
@@ -207,23 +323,26 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
             
             PersistentBase newOutputPersistent = (PersistentBase) sinkCall.getOutput().newPersistent() ;
 
+            // Copy each field of the tuple to the Persistent instance
             Iterator fieldsInTupleNameIterator = fieldsInTuple.iterator() ;
             while (fieldsInTupleNameIterator.hasNext()) {
                 String fieldName = (String) fieldsInTupleNameIterator.next() ;
                 if (fieldName.equals("key")) continue ;
+
+                // Check if the field of the tuple exist in the sinkFields declared in constructor
                 try {
-                    // Check if the field of the tuple exist in the sinkFields declared in constructor
-                    sinkFields.getPos(fieldName) ;
-                    // if reach here, exist (else will throw FieldsResolverException
-                    
-                    // Copy into persistent
-                    // Automatically sets dirty bits in Persistent for the field
+                    sinkFields.getPos(fieldName) ; // throw FieldsResolverException if not exist
+                } catch (FieldsResolverException e) {
+                    LOG.warn("Field <" + fieldName + "> not found in sink class " + newOutputPersistent.getClass().getName()) ;
+                    continue ;
+                }
+                 
+                // Copy into persistent
+                // Automatically sets dirty bits in Persistent for the field
+                try {
                     int indexInPersistent = newOutputPersistent.getFieldIndex(fieldName) ;
                     newOutputPersistent.put(indexInPersistent, tupleEntry.getObject(fieldName)) ;
-                
-                } catch(FieldsResolverException e) {
-                    LOG.warn("Field <" + fieldName + "> not found in sink class " + newOutputPersistent.getClass().getName()) ;
-                } catch (NullPointerException e) {
+                } catch(NullPointerException e) {
                     LOG.warn("Field <" + fieldName + "> not found in sink class " + newOutputPersistent.getClass().getName()) ;
                 }
                 
