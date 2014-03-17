@@ -33,16 +33,23 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
                                        Object[],         // SourceContext
                                        Object[]>         // SinkContext
 {
+    private static final long serialVersionUID = 1L;
     public static final Logger LOG = LoggerFactory.getLogger(GoraLocalScheme.class);
                                            
     Object queryStartKey ;
     Object queryEndKey ;
     Long queryLimit ;
 
-    /** Special Fields for retrieving all the instance */
-    public static final Fields keyAndPersistent = new Fields ("key", "persistent") ;
+    boolean sourceAsPersistent = false ;
+    boolean sinkAsPersistent = false ;
     
-    private static final long serialVersionUID = 1L;
+    /**Tuple field name for the key when sourcing/sinking */
+    String  tupleKeyFieldName = "key" ;
+    
+    /**Tuple field name for the persistent when sourcing/sinkin "*AsPersistent" */
+    String  tuplePersistentFieldName = "persistent" ;
+    
+    private GoraLocalTap tap ;
 
     public GoraLocalScheme() {
         this(/*source fields*/ Fields.ALL, /*sink fields*/ Fields.ALL, /*numSinkParts*/ 0) ;
@@ -82,9 +89,7 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
      */
     public GoraLocalScheme(Fields sourceFields, Fields sinkFields, int numSinkParts) {
         super(sourceFields, sinkFields, numSinkParts);
-        if (sourceFields.isAll()) {
-            this.setSourceFields(GoraLocalScheme.keyAndPersistent) ;
-        }
+        
     }
 
     public Object getQueryStartKey() {
@@ -111,6 +116,120 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
         this.queryLimit = queryLimit;
     }
 
+    public boolean isSourceAsPersistent() {
+        return sourceAsPersistent;
+    }
+
+    public void setSourceAsPersistent(boolean sourceAsPersistent) {
+        this.sourceAsPersistent = sourceAsPersistent;
+    }
+
+    public boolean isSinkAsPersistent() {
+        return sinkAsPersistent;
+    }
+
+    /**
+     * Configures the sink tuples fields accepted by this scheme for sink()
+     * If sinkAsPersistent==true, sink tuples accepted will be ("key", "persistent")
+     * Else, sink tuples accepted will be ("key", sink fields defined in constructor)
+     */
+    public void setSinkAsPersistent(boolean sinkAsPersistent) {
+        this.sinkAsPersistent = sinkAsPersistent;
+    }
+
+    public String getTupleKeyName() {
+        return tupleKeyFieldName;
+    }
+
+    public void setTupleKeyName(String tupleKeyName) {
+        this.tupleKeyFieldName = tupleKeyName;
+    }
+    
+    public String getTuplePersistentFieldName() {
+        return tuplePersistentFieldName;
+    }
+
+    public void setTuplePersistentFieldName(String tuplePersistentFieldName) {
+        this.tuplePersistentFieldName = tuplePersistentFieldName;
+    }
+
+    /**
+     * Get source fields for Gora
+     * @return
+     */
+    public Fields getConstructorSourceFields() {
+        return super.getSourceFields();
+    }
+
+    /**
+     * Get sink fields for Gora
+     * @return
+     */
+    public Fields getConstructorSinkFields() {
+        return super.getSinkFields();
+    }
+    
+    /**
+     * Return source fields information for Cascading.
+     * If source is read as persistent, returns tuple ("key", "persistent")
+     * else, returns ("key", source fields defined in constructor)
+     */
+    @Override
+    public Fields getSourceFields() {
+        if (this.isSourceAsPersistent()) { // (key,persistent)
+            return new Fields(this.getTupleKeyName(), this.getTuplePersistentFieldName()) ;
+        } else {
+            if (this.getConstructorSourceFields().equals(Fields.ALL) ||
+                this.getConstructorSourceFields().equals(Fields.UNKNOWN))
+            { // ALL => all from Persistent
+                try {
+                    return createFieldsFromPersistent((PersistentBase) this.tap.getDataStore(null).newPersistent()) ;
+                } catch (GoraException e) {
+                    throw new RuntimeException("ERROR creating list of tuple fields from Persistent.",e) ;
+                }
+            } else { // ("key", source fields from constructor)
+                return new Fields("key").append(this.getConstructorSourceFields()) ;
+            }
+        }
+    }
+
+    /**
+     * Return sink fields information for Cascading.
+     * If sinkAsPersistent==true, sink tuples accepted will be ("key", "persistent")
+     * Else, sink tuples accepted will be ("key", sink fields defined in constructor)
+     */
+    @Override
+    public Fields getSinkFields() {
+        if (this.isSinkAsPersistent()) { // ("key","persistent")
+            return new Fields(this.getTupleKeyName(), this.getTuplePersistentFieldName()) ;
+        } else {
+            if (this.getConstructorSinkFields().equals(Fields.ALL)) { // ALL => all from Persistent
+                try {
+                    return createFieldsFromPersistent((PersistentBase) this.tap.getDataStore(null).newPersistent()) ;
+                } catch (GoraException e) {
+                    throw new RuntimeException("ERROR creating list of tuple fields from Persistent.",e) ;
+                }
+            } else { // ("key", sink fields from constructor)
+                return new Fields("key").append(this.getConstructorSinkFields()) ;
+            }
+        }
+    }
+
+    /**
+     * Given a PersistentBase, returns a Fields with the list of all 1st level fields and the key field.
+     * @param p
+     * @return
+     */
+    private Fields createFieldsFromPersistent(PersistentBase p) {
+        Fields fields = new Fields(this.getTupleKeyName()) ;
+        // Given two sets A and B, intersection is B-(B-A)
+        Fields fromPersistent = new Fields(p.getFields()) ; // B
+        Fields toSubtract = new Fields(fromPersistent) ; // Btmp
+        toSubtract.subtract(this.getConstructorSinkFields()) ; // Btmp - A
+        fromPersistent.subtract(toSubtract) ;           // B - (Btmp - A)
+        return fields.append(fromPersistent) ; 
+    }
+    
     @SuppressWarnings("unchecked")
     public Query<?,? extends Persistent> createQuery(GoraLocalTap tap) throws GoraException {
         
@@ -123,8 +242,8 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
         if (this.queryLimit != null)
             query.setLimit(this.queryLimit) ;
         
-        if (this.getSourceFields().isDefined() && !this.getSourceFields().equalsFields(GoraLocalScheme.keyAndPersistent)) {
-            String[] fields = (String[]) Iterables.toArray(this.getSourceFields(), Object.class) ;
+        if (this.getSourceFields().isDefined()) { // Do not set if Fields.ALL
+            String[] fields = (String[]) Iterables.toArray(this.getConstructorSourceFields(), Object.class) ;
             query.setFields(fields) ;
         }
         return query ;
@@ -132,10 +251,12 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
     
     @Override
     public void sourceConfInit(FlowProcess<Properties> flowProcess, Tap<Properties, ResultBase, DataStore> tap, Properties propsConf) {
+        this.tap = (GoraLocalTap) tap ;
     }
 
     @Override
     public void sinkConfInit(FlowProcess<Properties> flowProcess, Tap<Properties, ResultBase, DataStore> tap, Properties propsConf) {
+        this.tap = (GoraLocalTap) tap ;
     }
     
     @Override
@@ -153,21 +274,20 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
         Fields tupleFields = tupleEntry.getFields() ;
         PersistentBase persistent = (PersistentBase) sourceCall.getInput().get() ;
 
-        tupleEntry.setString("key", (String) sourceCall.getInput().getKey()) ;
+        // Set key field
+        tupleEntry.setString(this.getTupleKeyName(), (String) sourceCall.getInput().getKey()) ;
         
-        // When the scheme is ("key", "persistent") the second field will be the Persistent instance 
-        if (tupleFields.equalsFields(GoraLocalScheme.keyAndPersistent)) {
-            tupleEntry.setObject("persistent", persistent) ;
+        if (this.isSourceAsPersistent()) {
+            tupleEntry.setObject(this.getTuplePersistentFieldName(), persistent) ;
         } else {
-            // scheme = ("key", "field", "field", ...)
-            Iterator sourceFields = this.getSourceFields().iterator() ;
+            // scheme has to be ("key", "field", "field", ...)
+            // Foreach declared field in source, take the field from Persistent and put into source tuple.
+// FIXME Maybe have to copy the field from Persistent?
+            Iterator sourceFields = this.getConstructorSourceFields().iterator() ;
             while (sourceFields.hasNext()) {
                 String tupleFieldName = (String) sourceFields.next() ;
-                if (!sourceFields.equals("key")) {
-                    setTupleFieldFromPersistent(persistent, tupleEntry, tupleFieldName) ;
-                }
+                setTupleFieldFromPersistent(persistent, tupleEntry, tupleFieldName) ;
             }
-
         }
         
         return true;
@@ -294,16 +414,15 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
     public void sink(FlowProcess<Properties> flowProcess, SinkCall<Object[], DataStore> sinkCall) throws IOException {
         TupleEntry tupleEntry = sinkCall.getOutgoingEntry() ;
         Fields fieldsInTuple = tupleEntry.getFields() ; // Received fields to save
-        Fields sinkFields = this.getSinkFields() ;
+        Fields sinkFields = this.getConstructorSinkFields() ;
 
-        String key = tupleEntry.getString("key") ;
+        String key = tupleEntry.getString(this.getTupleKeyName()) ;
 
-        // If tuple is (key, Persistent) as "key","persistent"
-        if (fieldsInTuple.equalsFields(GoraLocalScheme.keyAndPersistent)) {
+        if (this.isSinkAsPersistent()) {
+            // tuple ("key","persistent")
+            PersistentBase persistent = (PersistentBase) tupleEntry.getObject(this.getConstructorSinkFields()) ;
 
-            PersistentBase persistent = (PersistentBase) tupleEntry.getObject("persistent") ;
-
-            if (this.getSinkFields().equals(Fields.ALL)) {
+            if (this.getConstructorSinkFields().equals(Fields.ALL)) {
                 persistent.setDirty() ;
             } else {
                 persistent.clearDirty() ;
@@ -316,19 +435,17 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
                 }
             }
             sinkCall.getOutput().put(key, persistent) ;
-
         } else {
-            
-            // tuple is (key, field, field,...)
-            
-            PersistentBase newOutputPersistent = (PersistentBase) sinkCall.getOutput().newPersistent() ;
 
+            // tuple (key, field, field,...)
+            PersistentBase newOutputPersistent = (PersistentBase) sinkCall.getOutput().newPersistent() ;
+    
             // Copy each field of the tuple to the Persistent instance
             Iterator fieldsInTupleNameIterator = fieldsInTuple.iterator() ;
             while (fieldsInTupleNameIterator.hasNext()) {
                 String fieldName = (String) fieldsInTupleNameIterator.next() ;
-                if (fieldName.equals("key")) continue ;
-
+                if (fieldName.equals(this.getTupleKeyName())) continue ;
+    
                 // Check if the field of the tuple exist in the sinkFields declared in constructor
                 try {
                     sinkFields.getPos(fieldName) ; // throw FieldsResolverException if not exist
@@ -348,9 +465,7 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
                 
             }
             sinkCall.getOutput().put(key, newOutputPersistent) ;
-            
         }
-
     }
     
 }
