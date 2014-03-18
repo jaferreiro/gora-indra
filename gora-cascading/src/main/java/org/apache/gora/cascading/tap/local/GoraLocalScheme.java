@@ -23,11 +23,7 @@ import cascading.scheme.SinkCall;
 import cascading.scheme.SourceCall;
 import cascading.tap.Tap;
 import cascading.tuple.Fields;
-import cascading.tuple.FieldsResolverException;
 import cascading.tuple.TupleEntry;
-
-import com.google.common.collect.Iterables;
-import com.kenai.jffi.Array;
 
 @SuppressWarnings("rawtypes")
 public class GoraLocalScheme extends Scheme<Properties,  // Config
@@ -43,10 +39,14 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
     Object queryEndKey ;
     Long queryLimit ;
 
+    /** If true, source tuples will be formatted: ("key","persistent") */
     boolean sourceAsPersistent = false ;
+    /** If true, sink tuples must have format: ("key","persistent") */
     boolean sinkAsPersistent = false ;
     
+    /** Fields that will be read with Gora from datastore */
     String sourceGoraFields[] ;
+    /** Fields to write with Gora to datastore */
     String sinkGoraFields[] ;
     
     /**Tuple field name for the key when sourcing/sinking */
