@@ -37,14 +37,14 @@ import cascading.tuple.TupleEntryIterator;
 
 import com.google.common.collect.Maps;
 
-public class CopiaTest {
+public class CopiaTestDisabled {
 
     /** The configuration. */
     protected static Configuration     configuration;
 
     private static HBaseTestingUtility utility;
 
-    public CopiaTest() {
+    public CopiaTestDisabled() {
     }
 
     @BeforeClass
@@ -137,7 +137,7 @@ public class CopiaTest {
     public void copiar() throws IOException {
 
         Properties properties = new Properties();
-        AppProps.setApplicationJarClass(properties, CopiaTest.class);
+        AppProps.setApplicationJarClass(properties, CopiaTestDisabled.class);
 
         deleteTable(configuration, "test");
 
