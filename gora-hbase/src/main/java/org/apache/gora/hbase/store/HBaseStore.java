@@ -770,6 +770,7 @@ implements Configurable {
       return this ;
     }
     this.scannerCaching = numRows ;
+    LOG.info("Scanner Caching: " + numRows) ;
     return this ;
   }
   
