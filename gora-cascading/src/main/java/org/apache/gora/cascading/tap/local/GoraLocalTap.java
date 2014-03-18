@@ -122,7 +122,6 @@ public class GoraLocalTap extends Tap<Properties, ResultBase, DataStore> {
     public TupleEntryCollector openForWrite(FlowProcess<Properties> flowProcess, DataStore output) throws IOException {
         // Devolver un TupleEntryCollector que se recibirá instancias TupleEntry/Tuple para ir grabando.
         // @param output puede ser null y habrá que crear una instancia de GoraRecordWriter
-
         return new TupleEntrySchemeCollector(flowProcess, this.getScheme(), this.getDataStore(null)) ;
     }
 
