@@ -488,6 +488,23 @@
     </build>
 
     <profiles>
+
+        <profile>
+            <id>deploy-compartido</id>
+            <distributionManagement>
+                <repository>
+                    <id>celtic</id>
+                    <name>artifactory-releases</name>
+                    <url>http://88.3.208.228:8080/artifactory/compartido-release-local</url>
+                </repository>
+                <snapshotRepository>
+                    <id>celtic</id>
+                    <name>artifactory-snapshots</name>
+                    <url>http://88.3.208.228:8080/artifactory/compartido-snapshot-local</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
+
         <profile>
             <id>release</id>
             <build>
