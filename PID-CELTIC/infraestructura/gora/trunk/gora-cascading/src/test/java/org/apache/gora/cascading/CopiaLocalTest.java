@@ -33,7 +33,6 @@ import cascading.pipe.Each;
 import cascading.pipe.Pipe;
 import cascading.property.AppProps;
 import cascading.tap.Tap;
-import cascading.tuple.TupleEntryIterator;
 
 public class CopiaLocalTest {
 
