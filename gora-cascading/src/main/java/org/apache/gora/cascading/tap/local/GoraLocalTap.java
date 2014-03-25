@@ -26,7 +26,6 @@ import cascading.tuple.TupleEntrySchemeIterator;
 @SuppressWarnings({ "rawtypes" })
 public class GoraLocalTap extends Tap<Properties, ResultBase, DataStore> {
 
-    /** Field LOG */
     public static final Logger LOG = LoggerFactory.getLogger(GoraLocalTap.class);
 
     // TODO Change this to something decent. Does this identifier affects optimizations of Taps usage?
@@ -41,25 +40,25 @@ public class GoraLocalTap extends Tap<Properties, ResultBase, DataStore> {
     // HBase/HDFS configuration
     private JobConf jobConfiguration ;
     
-    public GoraLocalTap (Class<?> keyClass, Class<? extends Persistent> persistentClass, GoraLocalScheme scheme) {
+    public GoraLocalTap(Class<?> keyClass, Class<? extends Persistent> persistentClass, GoraLocalScheme scheme) {
         this(keyClass, persistentClass, scheme, SinkMode.KEEP) ;
     }
 
-    public GoraLocalTap (Class<?> keyClass, Class<? extends Persistent> persistentClass, GoraLocalScheme scheme, Configuration configuration) {
+    public GoraLocalTap(Class<?> keyClass, Class<? extends Persistent> persistentClass, GoraLocalScheme scheme, SinkMode sinkMode) {
+        this(keyClass, persistentClass, scheme, sinkMode, new Configuration()) ;
+    }
+    
+    public GoraLocalTap(Class<?> keyClass, Class<? extends Persistent> persistentClass, GoraLocalScheme scheme, Configuration configuration) {
         this(keyClass, persistentClass, scheme, SinkMode.KEEP, configuration) ;
     }
 
-    public GoraLocalTap (Class<?> keyClass, Class<? extends Persistent> persistentClass, GoraLocalScheme scheme, SinkMode sinkMode, Configuration configuration) {
+    public GoraLocalTap(Class<?> keyClass, Class<? extends Persistent> persistentClass, GoraLocalScheme scheme, SinkMode sinkMode, Configuration configuration) {
         super(scheme, sinkMode) ;
         this.keyClass = keyClass ;
         this.persistentClass = persistentClass ;
         this.jobConfiguration = new JobConf(configuration) ;
     }
 
-    public GoraLocalTap (Class<?> keyClass, Class<? extends Persistent> persistentClass, GoraLocalScheme scheme, SinkMode sinkMode) {
-        this(keyClass, persistentClass, scheme, sinkMode, new Configuration()) ;
-    }
-    
     /**
      * Retrieves the datastore
      * @param _conf Ignored properties configuration, since the configuration needed for the dataStore is taken from gora.properties and from *-site.xml(Hadoop)
@@ -120,8 +119,6 @@ public class GoraLocalTap extends Tap<Properties, ResultBase, DataStore> {
     @SuppressWarnings("unchecked")
     @Override
     public TupleEntryCollector openForWrite(FlowProcess<Properties> flowProcess, DataStore output) throws IOException {
-        // Devolver un TupleEntryCollector que se recibirá instancias TupleEntry/Tuple para ir grabando.
-        // @param output puede ser null y habrá que crear una instancia de GoraRecordWriter
         return new TupleEntrySchemeCollector(flowProcess, this.getScheme(), this.getDataStore(null)) ;
     }
 
@@ -133,6 +130,7 @@ public class GoraLocalTap extends Tap<Properties, ResultBase, DataStore> {
 
     @Override
     public void sinkConfInit(FlowProcess<Properties> flowProcess, Properties conf) {
+        LOG.debug("sinking to k-v: {}-{}", this.keyClass.getName(), this.persistentClass.getName()) ;
         super.sinkConfInit(flowProcess, conf);
     }
 
