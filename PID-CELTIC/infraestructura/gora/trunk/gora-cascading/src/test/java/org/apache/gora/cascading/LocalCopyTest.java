@@ -3,12 +3,13 @@ package org.apache.gora.cascading;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Properties;
 
 import org.apache.gora.cascading.tap.local.GoraLocalScheme;
 import org.apache.gora.cascading.tap.local.GoraLocalTap;
 import org.apache.gora.cascading.test.storage.TestRow;
+import org.apache.gora.cascading.test.storage.TestRowDest;
+import org.apache.gora.cascading.util.ConfigurationUtil;
 import org.apache.gora.store.DataStore;
 import org.apache.gora.store.DataStoreFactory;
 import org.apache.gora.util.GoraException;
@@ -26,25 +27,21 @@ import org.junit.Test;
 
 import cascading.flow.Flow;
 import cascading.flow.FlowConnector;
-import cascading.flow.hadoop.HadoopFlowConnector;
 import cascading.flow.local.LocalFlowConnector;
 import cascading.operation.Identity;
 import cascading.pipe.Each;
 import cascading.pipe.Pipe;
 import cascading.property.AppProps;
 import cascading.tap.Tap;
-import cascading.tuple.TupleEntryIterator;
 
-import com.google.common.collect.Maps;
+public class LocalCopyTest {
 
-public class CopiaTestDisabled {
-
-    /** The configuration. */
-    protected static Configuration     configuration;
+    /** The configuration */
+    protected static Configuration configuration;
 
     private static HBaseTestingUtility utility;
 
-    public CopiaTestDisabled() {
+    public LocalCopyTest() {
     }
 
     @BeforeClass
@@ -60,39 +57,33 @@ public class CopiaTestDisabled {
         utility.shutdownMiniCluster();
     }
 
-    public FlowConnector createHadoopFlowConnector() {
-        return createHadoopFlowConnector(Maps.newHashMap());
-    }
-
-    public FlowConnector createHadoopFlowConnector(Map<Object, Object> props) {
-        Map<Object, Object> finalProperties = Maps.newHashMap(props);
-        //finalProperties.put(HConstants.ZOOKEEPER_CLIENT_PORT, utility.getZkCluster().getClientPort());
-
-        return new HadoopFlowConnector(finalProperties);
-    }
-
     protected static void deleteTable(Configuration configuration, String tableName) throws IOException {
         HBaseAdmin hbase = new HBaseAdmin(configuration);
         if (hbase.tableExists(Bytes.toBytes(tableName))) {
             hbase.disableTable(Bytes.toBytes(tableName));
             hbase.deleteTable(Bytes.toBytes(tableName));
         }
-        //hbase.close();
     }
 
-    protected void verifySink(Flow flow, int expects) throws IOException {
-        int count = 0;
+    protected void verifySink(Flow<?> flow, int expects) throws Exception {
 
-        TupleEntryIterator iterator = flow.openSink();
-
-        while (iterator.hasNext()) {
-            count++;
-            System.out.println("iterator.next() = " + iterator.next());
+        DataStore<String, TestRowDest> dataStore = DataStoreFactory.getDataStore(String.class, TestRowDest.class, LocalCopyTest.configuration);
+        org.apache.gora.query.Result<String,TestRowDest> resultDest = dataStore.newQuery().execute() ;
+        
+        int numResults = 0 ;
+        while (resultDest.next()) {
+            numResults++ ;
+            System.out.println("key=" + resultDest.getKey()) ;
+            if (resultDest.getKey().equals("1")) {
+                TestRowDest persistent = resultDest.get() ;
+                assertEquals(2, persistent.getDefaultLong1()) ;
+                assertEquals("a", persistent.getDefaultStringEmpty().toString()) ;
+                assertEquals(10, persistent.getColumnLong().longValue()) ;
+            }
         }
 
-        iterator.close();
+        assertEquals("Wrong number of records written", 2, numResults) ;
 
-        assertEquals("wrong number of values in " + flow.getSink().toString(), expects, count);
     }
 
     protected void verify(String tableName, String family, String charCol, int expected) throws IOException {
@@ -116,7 +107,7 @@ public class CopiaTestDisabled {
 
     @Before
     public void before() throws GoraException {
-        DataStore<String, TestRow> dataStore = DataStoreFactory.getDataStore(String.class, TestRow.class, new Configuration());
+        DataStore<String, TestRow> dataStore = DataStoreFactory.getDataStore(String.class, TestRow.class, LocalCopyTest.configuration);
         TestRow t = dataStore.newPersistent();
         t.setDefaultLong1(2); // Campo obligatorio
         t.setDefaultStringEmpty("a"); //Campo obligatorio
@@ -134,25 +125,28 @@ public class CopiaTestDisabled {
     }
 
     @Test
-    public void copiar() throws IOException {
+    public void copiar() throws Exception {
 
-        Properties properties = new Properties();
-        AppProps.setApplicationJarClass(properties, CopiaTestDisabled.class);
-
-        deleteTable(configuration, "test");
+        Properties properties = ConfigurationUtil.toRawProperties(LocalCopyTest.configuration) ;
+        AppProps.setApplicationJarClass(properties, LocalCopyTest.class);
+        LocalCopyTest.configuration = ConfigurationUtil.toConfiguration(properties) ;
+        
+        //deleteTable(configuration, "test");
 
         GoraLocalScheme esquema = new GoraLocalScheme() ;
-        //esquema.setQuery(query) ;
-        Tap<?, ?, ?> origen = new GoraLocalTap(String.class, TestRow.class, esquema) ;
-        Tap<?, ?, ?> destino = new GoraLocalTap(String.class, TestRow.class, esquema) ;
+        
+        //esquema.setQueryStartKey(queryStartKey) ;
+        
+        Tap<?, ?, ?> origen = new GoraLocalTap(String.class, TestRow.class, esquema, LocalCopyTest.configuration) ;
+        Tap<?, ?, ?> destino = new GoraLocalTap(String.class, TestRowDest.class, esquema, LocalCopyTest.configuration) ;
 
         Pipe copyPipe = new Each("read", new Identity());
-        FlowConnector flowConnector = new LocalFlowConnector() ;
-        Flow copyFlow = flowConnector.connect(origen, destino, copyPipe);
+        FlowConnector flowConnector = new LocalFlowConnector(properties) ;
+        Flow<?> copyFlow = flowConnector.connect(origen, destino, copyPipe);
 
         copyFlow.complete();
-
-        verifySink(copyFlow, 5);
+        
+        verifySink(copyFlow, 2);
 
     }
 }

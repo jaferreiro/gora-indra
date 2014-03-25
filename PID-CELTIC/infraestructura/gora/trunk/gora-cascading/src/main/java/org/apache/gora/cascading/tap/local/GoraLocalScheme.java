@@ -95,10 +95,34 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
         this(sourceFields, false, sinkFields, false, 0) ;
     }
     
+    /**
+     * Constructor with source and sink fields that enables sourcing/sinking the Persistent instance
+     * as tuples with format ("key","persistent").
+     * 
+     * @see GoraLocalScheme#setTupleKeyName(String)
+     * @see GoraLocalScheme#setTuplePersistentFieldName(String)
+     * 
+     * @param sourceFields
+     * @param sourceAsPersistent if true, with source ("key","persistent")
+     * @param sinkFields
+     * @param sinkAsPersistent if true, will sink ("key","persistent")
+     */
     public GoraLocalScheme(Fields sourceFields, boolean sourceAsPersistent, Fields sinkFields, boolean sinkAsPersistent) {
         this(sourceFields, sourceAsPersistent, sinkFields, sinkAsPersistent, 0) ;
     }
 
+    /**
+     * Constructor with source and sink fields that enables sourcing/sinking the Persistent instance
+     * as tuples with format ("key","persistent").
+     * 
+     * @see GoraLocalScheme#setTupleKeyName(String)
+     * @see GoraLocalScheme#setTuplePersistentFieldName(String)
+     * 
+     * @param sourceFields
+     * @param sourceAsPersistent if true, with source ("key","persistent")
+     * @param sinkFields
+     * @param sinkAsPersistent if true, will sink ("key","persistent")
+     */
     public GoraLocalScheme(Fields sourceFields, boolean sourceAsPersistent, Fields sinkFields, boolean sinkAsPersistent, int numSinkParts) {
         super(sourceFields, sinkFields, numSinkParts);
         this.sourceAsPersistent = sourceAsPersistent ;
@@ -109,6 +133,12 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
         return queryStartKey;
     }
 
+    /** Sets the query start key. If <i>null</i> will query from the beginning of the table.
+     * 
+     * Recommended to set after creating a GoraLocalScheme instance.
+     * 
+     * @param queryStartKey
+     */
     public void setQueryStartKey(Object queryStartKey) {
         this.queryStartKey = queryStartKey;
     }
@@ -117,6 +147,12 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
         return queryEndKey;
     }
 
+    /** Sets the query end key. If <i>null</i> will query to the end of the table.
+     * 
+     * Recommended to set after creating a GoraLocalScheme instance.
+     * 
+     * @param queryStartKey
+     */
     public void setQueryEndKey(Object queryEndKey) {
         this.queryEndKey = queryEndKey;
     }
@@ -125,6 +161,12 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
         return queryLimit;
     }
 
+    /** Sets the limit to the number of retrieved elements.
+     * 
+     * Recommended to set after creating a GoraLocalScheme instance.
+     * 
+     * @param queryStartKey
+     */
     public void setQueryLimit(Long queryLimit) {
         this.queryLimit = queryLimit;
     }
@@ -133,6 +175,21 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
         return sourceAsPersistent;
     }
 
+    /**
+     * Defines de format of the sources tuples:
+     * 
+     * If sourceAsPersistent==false, tuples are sourced as ("key", "field1", "field2", "field3",...), so fields declared as
+     * source in the constructor will optimize the query and will set the fields of the tuple.
+     * 
+     * If sourceAspersistent==true, tuples are sources as ("key", "persistent") where the "persistent" field contains the
+     * specific Persistent instance defined as datasource value.
+     * The fields declared as source in the constructor will be only used to optimize the query.
+     * 
+     * @see GoraLocalScheme#setTupleKeyName(String)
+     * @see GoraLocalScheme#setTuplePersistentFieldName(String)
+     * 
+     * @param sourceAsPersistent (default false)
+     */
     public void setSourceAsPersistent(boolean sourceAsPersistent) {
         this.sourceAsPersistent = sourceAsPersistent;
     }
@@ -141,10 +198,22 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
         return sinkAsPersistent;
     }
 
+
     /**
-     * Configures the sink tuples fields accepted by this scheme for sink()
-     * If sinkAsPersistent==true, sink tuples accepted will be ("key", "persistent")
-     * Else, sink tuples accepted will be ("key", sink fields defined in constructor)
+     * Defines de format of the sink tuples accepted:
+     * 
+     * If sinkAsPersistent==false, accepts tuples to sink with the format ("key", "field1", "field2", "field3",...).
+     * If any tuple has more fields, this fields will be ignored and only saved the ones defined as fields in the constructor.
+     * 
+     * If sinkAspersistent==true, accepts tuples to sink with the format ("key", "persistent") where the "persistent" field contains the
+     * specific Persistent instance defined as datasource value.
+     * 
+     * The only fields saved will be the ones defined in the constructor as "sink fields".
+     * 
+     * @see GoraLocalScheme#setTupleKeyName(String)
+     * @see GoraLocalScheme#setTuplePersistentFieldName(String)
+     * 
+     * @param sourceAsPersistent (default false)
      */
     public void setSinkAsPersistent(boolean sinkAsPersistent) {
         this.sinkAsPersistent = sinkAsPersistent;
@@ -154,6 +223,10 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
         return tupleKeyFieldName;
     }
 
+    /**
+     * Sets the row key field name for source and sink tuples. 
+     * @param tupleKeyName (default "key")
+     */
     public void setTupleKeyName(String tupleKeyName) {
         this.tupleKeyFieldName = tupleKeyName;
     }
@@ -162,6 +235,10 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
         return tuplePersistentFieldName;
     }
 
+    /**
+     * Sets the field name for source and sink tuples that will hold the Persistent (the inherited from PersistentBase) instance
+     * @param tuplePersistentFieldName (default "persistent")
+     */
     public void setTuplePersistentFieldName(String tuplePersistentFieldName) {
         this.tuplePersistentFieldName = tuplePersistentFieldName;
     }
@@ -170,6 +247,10 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
         return sourceGoraFields;
     }
 
+    /**
+     * Sets the source fields instead defining them in the constructor.
+     * @param goraFields
+     */
     public void setSourceGoraFields(String[] goraFields) {
         this.sourceGoraFields = goraFields;
     }
@@ -178,6 +259,10 @@ public class GoraLocalScheme extends Scheme<Properties,  // Config
         return sinkGoraFields;
     }
 
+    /**
+     * Sets the sink fields instead defining them in the constructor.
+     * @param sinkGoraFields
+     */
     public void setSinkGoraFields(String[] sinkGoraFields) {
         this.sinkGoraFields = sinkGoraFields;
     }
