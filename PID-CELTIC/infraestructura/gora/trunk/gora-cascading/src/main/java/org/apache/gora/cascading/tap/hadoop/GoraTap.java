@@ -3,7 +3,6 @@ package org.apache.gora.cascading.tap.hadoop;
 import java.io.IOException;
 import java.util.UUID;
 
-import org.apache.gora.cascading.tap.local.GoraLocalTap;
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.store.DataStore;
 import org.apache.gora.store.DataStoreFactory;
@@ -25,7 +24,7 @@ import cascading.tuple.TupleEntryIterator;
 @SuppressWarnings({ "rawtypes" })
 public class GoraTap extends Tap<JobConf, RecordReader, OutputCollector> {
 
-    public static final Logger LOG = LoggerFactory.getLogger(GoraLocalTap.class);
+    public static final Logger LOG = LoggerFactory.getLogger(GoraTap.class);
 
     // TODO Change this to something decent. Does this identifier affects optimizations of Taps usage?
     private final String tapId = UUID.randomUUID().toString() ;
@@ -33,8 +32,7 @@ public class GoraTap extends Tap<JobConf, RecordReader, OutputCollector> {
     private Class<?> keyClass;
     private Class<? extends Persistent> persistentClass;
 
-    // TODO transient?
-    private DataStore<?, ? extends Persistent> dataStore ;
+    private transient DataStore<?, ? extends Persistent> dataStore ;
 
     public GoraTap(Class<?> keyClass, Class<? extends Persistent> persistentClass, GoraScheme scheme) {
         this(keyClass, persistentClass, scheme, SinkMode.KEEP) ;

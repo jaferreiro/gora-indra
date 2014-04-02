@@ -2,21 +2,18 @@ package org.apache.gora.cascading.tap.hadoop;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Properties;
 import java.util.Map.Entry;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.gora.cascading.tap.GoraDeprecatedInputFormatValueCopier;
 import org.apache.gora.mapreduce.GoraInputFormat;
 import org.apache.gora.mapreduce.GoraOutputFormat;
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.persistency.impl.PersistentBase;
 import org.apache.gora.query.Query;
 import org.apache.gora.store.DataStore;
-import org.apache.gora.store.DataStoreFactory;
 import org.apache.gora.util.GoraException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
@@ -32,7 +29,6 @@ import cascading.scheme.SinkCall;
 import cascading.scheme.SourceCall;
 import cascading.tap.Tap;
 import cascading.tuple.Fields;
-import cascading.tuple.Tuple;
 import cascading.tuple.TupleEntry;
 
 import com.twitter.elephantbird.mapred.input.DeprecatedInputFormatWrapper;
@@ -381,14 +377,14 @@ public class GoraScheme extends Scheme<JobConf,          // Config
 
             DataStore dataStore = ((GoraTap)tap).getDataStore(jobConf) ;
             Query query = dataStore.newQuery() ;
-            GoraInputFormat.setInput(tmpGoraJob, query, dataStore, false) ;
+            GoraInputFormat.setInput(tmpGoraJob, query, dataStore, true) ;
 
             // Copies the configuration set by "setInput()" into jobConf.
             this.mergeConfigurationFromTo(tmpGoraJob.getConfiguration(), jobConf) ; 
         } catch (Exception e) {
             throw new RuntimeException("Failed then configuring GoraInputFormat in the job",e) ;
         }
-        DeprecatedInputFormatWrapper.setInputFormat(GoraInputFormat.class, jobConf, GoraDeprecatedInputFormatValueCopier.class) ;
+        DeprecatedInputFormatWrapper.setInputFormat(GoraInputFormat.class, jobConf) ;
     }
 
     @SuppressWarnings("unchecked")
@@ -429,8 +425,8 @@ public class GoraScheme extends Scheme<JobConf,          // Config
     @SuppressWarnings("unchecked")
     @Override
     public boolean source(FlowProcess<JobConf> flowProcess, SourceCall<Object[], RecordReader> sourceCall) throws IOException {
-        String key = null ;
-        PersistentBase persistent = null ;
+        String key = (String) sourceCall.getInput().createKey() ;
+        PersistentBase persistent = (PersistentBase) sourceCall.getInput().createValue() ;
         try {
             if (!sourceCall.getInput().next((Object)key, (Object) persistent)) {
                 return false ;
@@ -453,6 +449,8 @@ public class GoraScheme extends Scheme<JobConf,          // Config
                 setTupleFieldFromPersistent(persistent, tupleEntry, fieldName) ;
             }
         }
+
+        LOG.debug("(Tuple sourced) " + tupleEntry.toString()) ;
         
         return true;
     }
@@ -578,8 +576,12 @@ public class GoraScheme extends Scheme<JobConf,          // Config
     public void sink(FlowProcess<JobConf> flowProcess, SinkCall<Object[], OutputCollector> sinkCall) throws IOException {
         OutputCollector collector = sinkCall.getOutput();
         TupleEntry tupleEntry = sinkCall.getOutgoingEntry() ;
+
+        LOG.debug("(Tuple to sink) " + tupleEntry.toString()) ;
         
         String key = tupleEntry.getString(this.getTupleKeyName()) ;
+
+        if (key == null) return ;
 
         if (this.isSinkAsPersistent()) {
             // tuple ("key","persistent")

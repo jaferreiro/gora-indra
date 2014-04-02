@@ -39,6 +39,7 @@ public class HadoopCopyTest {
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
+        deleteTable("test");
     }
 
     @AfterClass
@@ -110,10 +111,9 @@ public class HadoopCopyTest {
     public void copiar() throws IOException {
 
         Properties properties = new Properties();
-        AppProps.setApplicationJarClass(properties, HadoopCopyTest.class);
 
-        deleteTable("test");
-
+        AppProps.setApplicationJarPath(properties, "target/gora-cascading-0.4-indra-SNAPSHOT-test-jar-with-dependencies.jar") ;
+        
         GoraScheme esquema = new GoraScheme() ;
         esquema.setSourceAsPersistent(true) ;
         esquema.setSinkAsPersistent(true) ;
@@ -126,7 +126,7 @@ public class HadoopCopyTest {
 
         copyFlow.complete();
 
-        verifySink(copyFlow, 5);
+        verifySink(copyFlow, 2);
 
     }
 }

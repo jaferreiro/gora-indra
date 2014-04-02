@@ -65,7 +65,7 @@ public class GoraInputFormat<K, T extends PersistentBase>
   private Query<K, T> query;
 
   @SuppressWarnings({ "rawtypes" })
-  private void setInputPath(PartitionQuery<K,T> partitionQuery
+  protected void setInputPath(PartitionQuery<K,T> partitionQuery
       , TaskAttemptContext context) throws IOException {
     //if the data store is file based
     if(partitionQuery instanceof FileSplitPartitionQuery) {
