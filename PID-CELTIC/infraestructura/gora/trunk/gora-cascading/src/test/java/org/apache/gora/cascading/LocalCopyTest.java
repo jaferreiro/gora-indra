@@ -24,6 +24,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cascading.flow.Flow;
 import cascading.flow.FlowConnector;
@@ -35,6 +37,8 @@ import cascading.property.AppProps;
 import cascading.tap.Tap;
 
 public class LocalCopyTest {
+
+    public static final Logger LOG = LoggerFactory.getLogger(LocalCopyTest.class);
 
     /** The configuration */
     protected static Configuration configuration;
@@ -73,7 +77,7 @@ public class LocalCopyTest {
         int numResults = 0 ;
         while (resultDest.next()) {
             numResults++ ;
-            System.out.println("key=" + resultDest.getKey()) ;
+            LOG.debug("key = {}") ;
             if (resultDest.getKey().equals("1")) {
                 TestRowDest persistent = resultDest.get() ;
                 assertEquals(2, persistent.getDefaultLong1()) ;
@@ -96,7 +100,7 @@ public class LocalCopyTest {
         int count = 0;
         for (Result rowResult : scanner) {
             count++;
-            System.out.println("rowResult = " + rowResult.getValue(familyBytes, qulifierBytes));
+            LOG.debug("rowResult = {}", rowResult.getValue(familyBytes, qulifierBytes));
         }
 
         scanner.close();

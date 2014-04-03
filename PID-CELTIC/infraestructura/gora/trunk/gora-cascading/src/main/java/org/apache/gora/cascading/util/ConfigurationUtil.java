@@ -62,4 +62,21 @@ public class ConfigurationUtil {
         return toProperties(configuration, ToPropertiesMode.INTERPRETED) ;
     }
     
+    /**
+     * Merges configuration from the 'from' into the 'to'.
+     * If a 'from' key exists in 'to', it is ignored.
+     * If a 'from' key does not exists in 'to', it is added to 'to'.
+     * 
+     * Workaround used to merge Job configuration into JobConf
+     * @param from
+     * @param to
+     */
+    public static void mergeConfigurationFromTo(Configuration from, Configuration to) {
+        for(Entry<String,String> fromEntry: from) {
+            if (to.get(fromEntry.getKey()) == null) {
+                to.set(fromEntry.getKey(), fromEntry.getValue()) ;
+            }
+        }
+    }
+    
 }

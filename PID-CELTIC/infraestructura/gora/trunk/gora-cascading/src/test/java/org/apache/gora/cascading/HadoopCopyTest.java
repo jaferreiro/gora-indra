@@ -21,6 +21,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cascading.flow.Flow;
 import cascading.flow.FlowConnector;
@@ -30,9 +32,12 @@ import cascading.pipe.Each;
 import cascading.pipe.Pipe;
 import cascading.property.AppProps;
 import cascading.tap.Tap;
+import cascading.tuple.Fields;
 import cascading.tuple.TupleEntryIterator;
 
 public class HadoopCopyTest {
+
+    public static final Logger LOG = LoggerFactory.getLogger(HadoopCopyTest.class);
 
     public HadoopCopyTest() {
     }
@@ -61,7 +66,7 @@ public class HadoopCopyTest {
 
         while (iterator.hasNext()) {
             count++;
-            System.out.println("iterator.next() = " + iterator.next());
+            LOG.debug("iterator.next() = {}", iterator.next());
         }
 
         iterator.close();
@@ -79,7 +84,7 @@ public class HadoopCopyTest {
         int count = 0;
         for (Result rowResult : scanner) {
             count++;
-            System.out.println("rowResult = " + rowResult.getValue(familyBytes, qulifierBytes));
+            LOG.debug("rowResult = {}", rowResult.getValue(familyBytes, qulifierBytes));
         }
 
         scanner.close();
@@ -108,7 +113,7 @@ public class HadoopCopyTest {
     }
 
     @Test
-    public void copiar() throws IOException {
+    public void identityCopy() throws IOException {
 
         Properties properties = new Properties();
 
@@ -129,4 +134,26 @@ public class HadoopCopyTest {
         verifySink(copyFlow, 2);
 
     }
+    
+    @Test
+    public void incrementField() throws IOException {
+
+        Properties properties = new Properties();
+
+        AppProps.setApplicationJarPath(properties, "target/gora-cascading-0.4-indra-SNAPSHOT-test-jar-with-dependencies.jar") ;
+        
+        GoraScheme esquema = new GoraScheme() ;
+        Tap<?, ?, ?> origen = new GoraTap(String.class, TestRow.class, esquema) ;
+        Tap<?, ?, ?> destino = new GoraTap(String.class, TestRow.class, esquema) ;
+
+        Pipe insertPipe = new Each("insert", new Fields("defaultLong1"), new IncrementField(new Fields("unionLong")), Fields.REPLACE) ;
+        FlowConnector flowConnector = new HadoopFlowConnector(properties) ;
+        Flow copyFlow = flowConnector.connect(origen, destino, insertPipe);
+
+        copyFlow.complete();
+
+        verifySink(copyFlow, 2);
+
+    }
+    
 }
