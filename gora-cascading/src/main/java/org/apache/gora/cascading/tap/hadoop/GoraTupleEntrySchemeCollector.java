@@ -8,8 +8,8 @@ import org.apache.hadoop.mapred.OutputFormat;
 import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapreduce.Counter;
-import org.apache.hadoop.mapreduce.MapReduceTestUtil;
 import org.apache.hadoop.mapreduce.StatusReporter;
+import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 import org.apache.hadoop.util.Progressable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,39 +71,65 @@ public class GoraTupleEntrySchemeCollector extends TupleEntrySchemeCollector imp
             super.prepare();
     }
 
+    @SuppressWarnings("rawtypes")
     public static class DumbStatusReporterProgressable extends StatusReporter implements Progressable {
 
+        // Copied from PigReporter
+        private TaskInputOutputContext context;
+        private static DumbStatusReporterProgressable reporter = null;
+        /**
+         * Get singleton instance of the context
+         */
+        public static DumbStatusReporterProgressable getInstance() {
+            if (reporter == null) {
+                reporter = new DumbStatusReporterProgressable(null);
+            }
+            return reporter;
+        }
+        
+        public static void setContext(TaskInputOutputContext context) {
+            reporter = new DumbStatusReporterProgressable(context);
+        }
+        
+        private DumbStatusReporterProgressable(TaskInputOutputContext context) {
+            this.context = context;
+        }
+        
+        @SuppressWarnings("unchecked")
         @Override
-        public Counter getCounter(Enum<?> paramEnum) {
-            // TODO Auto-generated method stub
-            return null;
+        public Counter getCounter(Enum<?> name) {        
+            return (context == null) ? null : context.getCounter(name);
         }
 
         @Override
-        public Counter getCounter(String paramString1, String paramString2) {
-            // TODO Auto-generated method stub
-            return null;
+        public Counter getCounter(String group, String name) {
+            return (context == null) ? null : context.getCounter(group, name);
         }
 
         @Override
         public void progress() {
-            // TODO Auto-generated method stub
-            
+            if (context != null) {
+                context.progress();
+            }
         }
 
         @Override
-        public void setStatus(String paramString) {
-            // TODO Auto-generated method stub
-            
+        public void setStatus(String status) {
+            if (context != null) {
+                context.setStatus(status);
+            }
         }
-        
+
+        public float getProgress() {
+            return 0;
+        }
         
     }
     
     private void initialize() throws IOException {
             tap.sinkConfInit(hadoopFlowProcess, conf);
             OutputFormat outputFormat = conf.getOutputFormat();
-            writer = outputFormat.getRecordWriter(null, conf, tap.getIdentifier(), new DumbStatusReporterProgressable());
+            writer = outputFormat.getRecordWriter(null, conf, tap.getIdentifier(), DumbStatusReporterProgressable.getInstance());
             sinkCall.setOutput(this);
     }
 
