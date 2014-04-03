@@ -51,7 +51,8 @@ public class LocalCopyTest {
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
         System.setProperty(HBaseTestingUtility.TEST_DIRECTORY_KEY, "build/test-data");
-        utility = new HBaseTestingUtility();
+        // Create the cluster but without loading hbase-site.xml in /resources
+        utility = new HBaseTestingUtility(new Configuration());
         utility.startMiniCluster(1);
         configuration = utility.getConfiguration();
     }
