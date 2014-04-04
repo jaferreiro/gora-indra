@@ -8,15 +8,19 @@ import junit.framework.Assert;
 import org.apache.gora.cascading.tap.hadoop.GoraScheme;
 import org.apache.gora.cascading.tap.hadoop.GoraTap;
 import org.apache.gora.cascading.test.storage.TestRow;
+import org.apache.gora.cascading.util.ConfigurationUtil;
+import org.apache.gora.cascading.util.ConfigurationUtil.ToPropertiesMode;
 import org.apache.gora.store.DataStore;
 import org.apache.gora.store.DataStoreFactory;
 import org.apache.gora.util.GoraException;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.mapred.JobConf;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -39,18 +43,30 @@ public class HadoopCopyTest {
 
     public static final Logger LOG = LoggerFactory.getLogger(HadoopCopyTest.class);
 
+    /** The configuration */
+    protected static Configuration configuration;
+
+    private static HBaseTestingUtility utility;
+    
     public HadoopCopyTest() {
     }
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
-        deleteTable("test");
+        System.setProperty(HBaseTestingUtility.TEST_DIRECTORY_KEY, "build/test-data");
+        Configuration localExecutionConfiguration = new Configuration() ;
+        localExecutionConfiguration.setStrings("hadoop.log.dir", localExecutionConfiguration.get("hadoop.tmp.dir")) ;
+        utility = new HBaseTestingUtility(localExecutionConfiguration);
+        utility.startMiniCluster(1);
+        utility.startMiniMapReduceCluster(1) ;
+        configuration = utility.getConfiguration();
     }
 
     @AfterClass
     public static void tearDownAfterClass() throws Exception {
+        utility.shutdownMiniCluster();
     }
-
+    
     protected static void deleteTable(String tableName) throws IOException {
         HBaseAdmin hbase = new HBaseAdmin(new Configuration());
         if (hbase.tableExists(Bytes.toBytes(tableName))) {
@@ -95,7 +111,7 @@ public class HadoopCopyTest {
 
     @Before
     public void before() throws GoraException {
-        DataStore<String, TestRow> dataStore = DataStoreFactory.getDataStore(String.class, TestRow.class, new Configuration());
+        DataStore<String, TestRow> dataStore = DataStoreFactory.getDataStore(String.class, TestRow.class, HadoopCopyTest.configuration);
         TestRow t = dataStore.newPersistent();
         t.setDefaultLong1(2); // Campo obligatorio
         t.setDefaultStringEmpty("a"); //Campo obligatorio
@@ -115,9 +131,9 @@ public class HadoopCopyTest {
     @Test
     public void identityCopy() throws IOException {
 
-        Properties properties = new Properties();
-
+        Properties properties = ConfigurationUtil.toRawProperties(HadoopCopyTest.configuration) ;
         AppProps.setApplicationJarPath(properties, "target/gora-cascading-0.4-indra-SNAPSHOT-test-jar-with-dependencies.jar") ;
+        HadoopCopyTest.configuration = ConfigurationUtil.toConfiguration(properties) ;
         
         GoraScheme esquema = new GoraScheme() ;
         esquema.setSourceAsPersistent(true) ;
@@ -138,9 +154,9 @@ public class HadoopCopyTest {
     @Test
     public void incrementField() throws IOException {
 
-        Properties properties = new Properties();
-
+        Properties properties = ConfigurationUtil.toRawProperties(HadoopCopyTest.configuration) ;
         AppProps.setApplicationJarPath(properties, "target/gora-cascading-0.4-indra-SNAPSHOT-test-jar-with-dependencies.jar") ;
+        HadoopCopyTest.configuration = ConfigurationUtil.toConfiguration(properties) ;
         
         GoraScheme esquema = new GoraScheme() ;
         Tap<?, ?, ?> origen = new GoraTap(String.class, TestRow.class, esquema) ;
