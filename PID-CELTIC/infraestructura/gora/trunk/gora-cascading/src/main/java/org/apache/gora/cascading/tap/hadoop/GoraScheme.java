@@ -38,7 +38,6 @@ public class GoraScheme extends AbstractGoraScheme<JobConf, // Config
                                        GoraTap>          // Tap class
 { 
 
-    private static final long serialVersionUID = 1L;
     public static final Logger LOG = LoggerFactory.getLogger(GoraScheme.class);
     
     public GoraScheme() {

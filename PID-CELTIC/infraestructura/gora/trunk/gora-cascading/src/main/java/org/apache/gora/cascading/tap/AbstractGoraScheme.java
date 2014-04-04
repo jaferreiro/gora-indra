@@ -20,10 +20,10 @@ import cascading.tap.Tap;
 import cascading.tuple.Fields;
 import cascading.tuple.TupleEntry;
 
+@SuppressWarnings("rawtypes")
 public abstract class AbstractGoraScheme<CONFIG, INPUT, OUTPUT, SOURCECONTEXT, SINKCONTEXT, TAP extends AbstractGoraTap>
                 extends Scheme<CONFIG, INPUT, OUTPUT, SOURCECONTEXT, SINKCONTEXT>
 {
-    private static final long serialVersionUID = 1L;
     public static final Logger LOG = LoggerFactory.getLogger(AbstractGoraScheme.class);
     
     Object queryStartKey ;
@@ -207,11 +207,9 @@ public abstract class AbstractGoraScheme<CONFIG, INPUT, OUTPUT, SOURCECONTEXT, S
      * @param tap
      * @return
      */
-    @SuppressWarnings("rawtypes")
     protected abstract String[] getPersistentFields(FlowProcess<CONFIG> flowProcess, Tap tap) throws GoraException;
     
     //TODO Refactor retrieveSourceFields and retrieveSinkFields
-    @SuppressWarnings("rawtypes")
     @Override
     public Fields retrieveSourceFields(FlowProcess<CONFIG> flowProcess, Tap tap) {
         // Default gora fields = persistent fields
@@ -256,7 +254,6 @@ public abstract class AbstractGoraScheme<CONFIG, INPUT, OUTPUT, SOURCECONTEXT, S
         return this.getSourceFields() ; // == just set cascadingSourceFields 
     }    
     
-    @SuppressWarnings("rawtypes")
     @Override
     public Fields retrieveSinkFields(FlowProcess<CONFIG> flowProcess, Tap tap) {
         // Default gora fields = persistent fields
@@ -302,7 +299,7 @@ public abstract class AbstractGoraScheme<CONFIG, INPUT, OUTPUT, SOURCECONTEXT, S
 
     }
     
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "unchecked" })
     public Query<?,? extends Persistent> createQuery(TAP tap) throws GoraException {
         
         Query query = tap.getDataStore(null).newQuery() ;

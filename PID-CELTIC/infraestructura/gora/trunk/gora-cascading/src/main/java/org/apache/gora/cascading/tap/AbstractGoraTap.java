@@ -29,7 +29,7 @@ public abstract class AbstractGoraTap<CONFIG, INPUT, OUTPUT, SCHEME extends Sche
     private Class<? extends Persistent> persistentClass;
     
     // HBase/HDFS configuration (refactorized from LocalTap)
-    private JobConf jobConfiguration ;
+    private transient JobConf jobConfiguration ;
 
     private transient DataStore<?, ? extends Persistent> dataStore ;
     
