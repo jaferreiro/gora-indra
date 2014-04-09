@@ -138,8 +138,9 @@ public String[] getLocations() {
   @Override
   public void readFields(DataInput in) throws IOException {
     super.readFields(in);
+    
     try {
-      baseQuery = IOUtils.deserialize(null, in, null);
+      baseQuery = IOUtils.deserialize(getConf(), in, null);
     } catch (ClassNotFoundException ex) {
       throw new IOException(ex);
     }
