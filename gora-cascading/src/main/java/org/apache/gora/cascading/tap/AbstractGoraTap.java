@@ -1,8 +1,10 @@
 package org.apache.gora.cascading.tap;
 
 import java.io.IOException;
+import java.util.Properties;
 import java.util.UUID;
 
+import org.apache.gora.cascading.util.ConfigurationUtil;
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.store.DataStore;
 import org.apache.gora.store.DataStoreFactory;
@@ -28,9 +30,6 @@ public abstract class AbstractGoraTap<CONFIG, INPUT, OUTPUT, SCHEME extends Sche
     private Class<?> keyClass;
     private Class<? extends Persistent> persistentClass;
     
-    // HBase/HDFS configuration (refactorized from LocalTap)
-    private transient JobConf jobConfiguration ;
-
     private transient DataStore<?, ? extends Persistent> dataStore ;
     
     @SuppressWarnings("unchecked")
@@ -38,7 +37,6 @@ public abstract class AbstractGoraTap<CONFIG, INPUT, OUTPUT, SCHEME extends Sche
         super(scheme, sinkMode) ;
         this.keyClass = keyClass ;
         this.persistentClass = persistentClass ;
-        this.jobConfiguration = new JobConf(configuration) ;
     }
     
     /**
@@ -48,13 +46,13 @@ public abstract class AbstractGoraTap<CONFIG, INPUT, OUTPUT, SCHEME extends Sche
      * @return
      * @throws GoraException
      */
-    public DataStore<?, ? extends Persistent> getDataStore(CONFIG conf) throws GoraException {
+    public DataStore<?, ? extends Persistent> getDataStore(CONFIG cascadingConf) throws GoraException {
         if (this.dataStore == null) {
-            if (conf instanceof Configuration) {
-                this.dataStore = DataStoreFactory.getDataStore(this.keyClass, this.persistentClass, (Configuration)conf) ;
-            } else {
-                this.dataStore = DataStoreFactory.getDataStore(this.keyClass, this.persistentClass, this.jobConfiguration) ;
+            Object configuration = cascadingConf ;
+            if (cascadingConf instanceof Properties) {
+                configuration = ConfigurationUtil.toConfiguration((Properties)cascadingConf) ;
             }
+            this.dataStore = DataStoreFactory.getDataStore(this.keyClass, this.persistentClass, (Configuration)configuration) ;
         }
         return this.dataStore ;
     }
