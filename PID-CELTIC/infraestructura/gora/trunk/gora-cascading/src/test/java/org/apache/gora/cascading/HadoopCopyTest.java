@@ -1,5 +1,7 @@
 package org.apache.gora.cascading;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.util.Properties;
 
@@ -8,6 +10,7 @@ import junit.framework.Assert;
 import org.apache.gora.cascading.tap.hadoop.GoraScheme;
 import org.apache.gora.cascading.tap.hadoop.GoraTap;
 import org.apache.gora.cascading.test.storage.TestRow;
+import org.apache.gora.cascading.test.storage.TestRowDest;
 import org.apache.gora.cascading.util.ConfigurationUtil;
 import org.apache.gora.cascading.util.ConfigurationUtil.ToPropertiesMode;
 import org.apache.gora.store.DataStore;
@@ -129,7 +132,7 @@ public class HadoopCopyTest {
     }
 
     @Test
-    public void identityCopy() throws IOException {
+    public void identityCopy() throws Exception {
 
         Properties properties = ConfigurationUtil.toRawProperties(HadoopCopyTest.configuration) ;
         AppProps.setApplicationJarPath(properties, "target/gora-cascading-0.4-indra-SNAPSHOT-test-jar-with-dependencies.jar") ;
@@ -148,11 +151,32 @@ public class HadoopCopyTest {
         copyFlow.complete();
 
         verifySink(copyFlow, 2);
+        verifyValuesCopy() ;
 
+    }
+
+    private void verifyValuesCopy() throws IOException, Exception {
+        DataStore<String, TestRow> dataStore = DataStoreFactory.getDataStore(String.class, TestRow.class, HadoopCopyTest.configuration);
+        org.apache.gora.query.Result<String,TestRow> resultDest = dataStore.newQuery().execute() ;
+        
+        int numResults = 0 ;
+        while (resultDest.next()) {
+            numResults++ ;
+            LOG.debug("key = {}",resultDest.getKey().toString()) ;
+            if (resultDest.getKey().equals("1")) {
+                TestRow persistent = resultDest.get() ;
+                assertEquals(2, persistent.getDefaultLong1()) ;
+                assertEquals("a", persistent.getDefaultStringEmpty().toString()) ;
+                assertEquals(10, persistent.getColumnLong().longValue()) ;
+            }
+        }
+
+        assertEquals("Wrong number of records written", 2, numResults) ;
+        
     }
     
     @Test
-    public void incrementField() throws IOException {
+    public void incrementField() throws Exception {
 
         Properties properties = ConfigurationUtil.toRawProperties(HadoopCopyTest.configuration) ;
         AppProps.setApplicationJarPath(properties, "target/gora-cascading-0.4-indra-SNAPSHOT-test-jar-with-dependencies.jar") ;
@@ -169,7 +193,28 @@ public class HadoopCopyTest {
         copyFlow.complete();
 
         verifySink(copyFlow, 2);
+        verifyValuesIncrement() ;
+    }
 
+    private void verifyValuesIncrement() throws IOException, Exception {
+        DataStore<String, TestRow> dataStore = DataStoreFactory.getDataStore(String.class, TestRow.class, HadoopCopyTest.configuration);
+        org.apache.gora.query.Result<String,TestRow> resultDest = dataStore.newQuery().execute() ;
+        
+        int numResults = 0 ;
+        while (resultDest.next()) {
+            numResults++ ;
+            LOG.debug("key = {}",resultDest.getKey().toString()) ;
+            if (resultDest.getKey().equals("1")) {
+                TestRow persistent = resultDest.get() ;
+                assertEquals(2, persistent.getDefaultLong1()) ;
+                assertEquals("a", persistent.getDefaultStringEmpty().toString()) ;
+                assertEquals(10, persistent.getColumnLong().longValue()) ;
+                assertEquals(67, persistent.getUnionLong().longValue()) ;
+            }
+        }
+
+        assertEquals("Wrong number of records written", 2, numResults) ;
+        
     }
     
 }

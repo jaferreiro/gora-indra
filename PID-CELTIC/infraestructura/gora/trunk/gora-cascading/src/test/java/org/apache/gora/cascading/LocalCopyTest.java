@@ -3,8 +3,10 @@ package org.apache.gora.cascading;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.util.Properties;
+import java.util.Map;
 
+import org.apache.gora.cascading.tap.hadoop.GoraScheme;
+import org.apache.gora.cascading.tap.hadoop.GoraTap;
 import org.apache.gora.cascading.tap.local.GoraLocalScheme;
 import org.apache.gora.cascading.tap.local.GoraLocalTap;
 import org.apache.gora.cascading.test.storage.TestRow;
@@ -29,12 +31,14 @@ import org.slf4j.LoggerFactory;
 
 import cascading.flow.Flow;
 import cascading.flow.FlowConnector;
+import cascading.flow.hadoop.HadoopFlowConnector;
 import cascading.flow.local.LocalFlowConnector;
 import cascading.operation.Identity;
 import cascading.pipe.Each;
 import cascading.pipe.Pipe;
 import cascading.property.AppProps;
 import cascading.tap.Tap;
+import cascading.tuple.Fields;
 
 public class LocalCopyTest {
 
@@ -78,7 +82,7 @@ public class LocalCopyTest {
         int numResults = 0 ;
         while (resultDest.next()) {
             numResults++ ;
-            LOG.debug("key = {}") ;
+            LOG.debug("key = {}",resultDest.getKey().toString()) ;
             if (resultDest.getKey().equals("1")) {
                 TestRowDest persistent = resultDest.get() ;
                 assertEquals(2, persistent.getDefaultLong1()) ;
@@ -91,6 +95,28 @@ public class LocalCopyTest {
 
     }
 
+    protected void verifyIncrementField(Flow<?> flow, int expects) throws Exception {
+
+        DataStore<String, TestRowDest> dataStore = DataStoreFactory.getDataStore(String.class, TestRowDest.class, LocalCopyTest.configuration);
+        org.apache.gora.query.Result<String,TestRowDest> resultDest = dataStore.newQuery().execute() ;
+        
+        int numResults = 0 ;
+        while (resultDest.next()) {
+            numResults++ ;
+            LOG.debug("key = {}",resultDest.getKey().toString()) ;
+            if (resultDest.getKey().equals("1")) {
+                TestRowDest persistent = resultDest.get() ;
+                assertEquals(2, persistent.getDefaultLong1()) ;
+                assertEquals("a", persistent.getDefaultStringEmpty().toString()) ;
+                assertEquals(10, persistent.getColumnLong().longValue()) ;
+                assertEquals(67, persistent.getUnionLong().longValue()) ;
+            }
+        }
+
+        assertEquals("Wrong number of records written", 2, numResults) ;
+
+    }
+    
     protected void verify(String tableName, String family, String charCol, int expected) throws IOException {
         byte[] familyBytes = Bytes.toBytes(family);
         byte[] qulifierBytes = Bytes.toBytes(charCol);
@@ -101,7 +127,7 @@ public class LocalCopyTest {
         int count = 0;
         for (Result rowResult : scanner) {
             count++;
-            LOG.debug("rowResult = {}", rowResult.getValue(familyBytes, qulifierBytes));
+            LOG.info("rowResult = {}", rowResult.getValue(familyBytes, qulifierBytes));
         }
 
         scanner.close();
@@ -132,7 +158,7 @@ public class LocalCopyTest {
     @Test
     public void copiar() throws Exception {
 
-        Properties properties = ConfigurationUtil.toRawProperties(LocalCopyTest.configuration) ;
+        Map<Object, Object> properties = ConfigurationUtil.toRawMap(LocalCopyTest.configuration) ;
         AppProps.setApplicationJarClass(properties, LocalCopyTest.class);
         LocalCopyTest.configuration = ConfigurationUtil.toConfiguration(properties) ;
         
@@ -154,5 +180,25 @@ public class LocalCopyTest {
         verifySink(copyFlow, 2);
 
     }
-    
+
+    @Test
+    public void incrementField() throws Exception {
+
+        Map<Object, Object> properties = ConfigurationUtil.toRawMap(LocalCopyTest.configuration) ;
+        AppProps.setApplicationJarClass(properties, LocalCopyTest.class);
+        LocalCopyTest.configuration = ConfigurationUtil.toConfiguration(properties) ;
+        
+        GoraLocalScheme esquema = new GoraLocalScheme() ;
+        Tap<?, ?, ?> origen = new GoraLocalTap(String.class, TestRow.class, esquema) ;
+        Tap<?, ?, ?> destino = new GoraLocalTap(String.class, TestRowDest.class, esquema) ;
+
+        Pipe insertPipe = new Each("insert", new Fields("defaultLong1"), new IncrementField(new Fields("unionLong")), Fields.REPLACE) ;
+        FlowConnector flowConnector = new LocalFlowConnector(properties) ;
+        Flow copyFlow = flowConnector.connect(origen, destino, insertPipe);
+
+        copyFlow.complete();
+
+        verifyIncrementField(copyFlow, 2);
+
+    }    
 }

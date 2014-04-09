@@ -105,7 +105,7 @@ public class GoraLocalScheme extends AbstractGoraScheme<Properties,  // Config
     
     @Override
     protected String[] getPersistentFields(FlowProcess<Properties> flowProcess, Tap tap) throws GoraException {
-        return ((PersistentBase) ((GoraLocalTap)tap).getDataStore(null).newPersistent()).getFields() ;
+        return ((PersistentBase) ((GoraLocalTap)tap).getDataStore(flowProcess.getConfigCopy()).newPersistent()).getFields() ;
     }
     
     @Override
@@ -163,6 +163,8 @@ public class GoraLocalScheme extends AbstractGoraScheme<Properties,  // Config
     public void sink(FlowProcess<Properties> flowProcess, SinkCall<Object[], DataStore> sinkCall) throws IOException {
         TupleEntry tupleEntry = sinkCall.getOutgoingEntry() ;
 
+        LOG.debug("(Tuple to sink) ", tupleEntry.toString()) ;
+
         String key = tupleEntry.getString(this.getTupleKeyName()) ;
 
         if (this.isSinkAsPersistent()) {
@@ -191,14 +193,27 @@ public class GoraLocalScheme extends AbstractGoraScheme<Properties,  // Config
                     if (value instanceof String){
                         value = new Utf8((String)value) ;
                     }
+                    if (value instanceof Integer) {
+                        value = ((Integer) value).longValue() ;
+                    }
                     newOutputPersistent.put(indexInPersistent, value) ;
                 } catch(NullPointerException e) {
-                    LOG.warn("Field <" + fieldName + "> not found in sink class " + newOutputPersistent.getClass().getName()) ;
+                    LOG.warn("Field <{}> not found in sink class {}", fieldName, newOutputPersistent.getClass().getName()) ;
                 }
                 
             }
             sinkCall.getOutput().put(key, newOutputPersistent) ;
         }
     }
+
+    /**
+     * Flush all pending Puts. 
+     */
+    @Override
+    public void sinkCleanup(FlowProcess<Properties> flowProcess, SinkCall<Object[], DataStore> sinkCall) throws IOException {
+        super.sinkCleanup(flowProcess, sinkCall);
+        sinkCall.getOutput().flush() ;
+    }
+
     
 }

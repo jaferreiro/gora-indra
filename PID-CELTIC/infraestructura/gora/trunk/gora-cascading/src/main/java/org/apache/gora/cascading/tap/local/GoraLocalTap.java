@@ -46,14 +46,14 @@ public class GoraLocalTap extends AbstractGoraTap<Properties, ResultBase, DataSt
         if (input != null) {
             return new TupleEntrySchemeIterator(flowProcess, this.getScheme(), input) ;
         }
-        Query query = this.getScheme().createQuery(this) ;
+        Query query = this.getScheme().createQuery(flowProcess, this) ;
         return new TupleEntrySchemeIterator(flowProcess, this.getScheme(), new CloseableResultIterator(query.execute())) ;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public TupleEntryCollector openForWrite(FlowProcess<Properties> flowProcess, DataStore output) throws IOException {
-        return new TupleEntrySchemeCollector(flowProcess, this.getScheme(), this.getDataStore(null)) ;
+        return new TupleEntrySchemeCollector(flowProcess, this.getScheme(), this.getDataStore(flowProcess.getConfigCopy())) ;
     }
 
 }

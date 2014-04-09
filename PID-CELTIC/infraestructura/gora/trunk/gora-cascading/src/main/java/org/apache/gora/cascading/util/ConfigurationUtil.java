@@ -1,6 +1,8 @@
 package org.apache.gora.cascading.util;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
@@ -24,6 +26,16 @@ public class ConfigurationUtil {
         return configuration ;
     }
 
+    public static Configuration toConfiguration(Map<Object,Object> map) {
+        Configuration configuration = new Configuration(false) ;
+        if (map != null) {
+            for (Entry<Object,Object> entry : map.entrySet()) {
+                configuration.set((String) entry.getKey(), String.valueOf(entry.getValue())) ;
+            }
+        }
+        return configuration ;
+    }
+    
     public static Properties toProperties(Configuration configuration, ToPropertiesMode mode) {
         Properties properties = new Properties() ;
         if (configuration != null) {
@@ -53,6 +65,18 @@ public class ConfigurationUtil {
         return toProperties(configuration, ToPropertiesMode.RAW) ;
     }
 
+    public static Map<Object,Object> toRawMap(Configuration configuration) {
+        Map<Object,Object> hashMap = new HashMap<Object,Object>(configuration.size());
+        if (configuration != null) {
+            Iterator<Entry<String,String>> configurationIterator = configuration.iterator() ;
+            while (configurationIterator.hasNext()) {
+                Entry<String,String> entry = configurationIterator.next() ;
+                hashMap.put(entry.getKey(), configuration.getRaw(entry.getKey())) ;
+            }
+        }
+        return hashMap ;
+    }
+    
     /**
      * Creates a Properties with values (variables not substituted) form Configuration
      * @param configuration

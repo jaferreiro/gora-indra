@@ -1,6 +1,7 @@
 package org.apache.gora.cascading.tap;
 
 import java.util.Iterator;
+import java.util.Properties;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
@@ -300,9 +301,9 @@ public abstract class AbstractGoraScheme<CONFIG, INPUT, OUTPUT, SOURCECONTEXT, S
     }
     
     @SuppressWarnings({ "unchecked" })
-    public Query<?,? extends Persistent> createQuery(TAP tap) throws GoraException {
+    public Query<?,? extends Persistent> createQuery(FlowProcess<CONFIG> flowProcess, TAP tap) throws GoraException {
         
-        Query query = tap.getDataStore(null).newQuery() ;
+        Query query = tap.getDataStore(flowProcess.getConfigCopy()).newQuery() ;
         
         if (this.queryStartKey != null)
             query.setStartKey(this.queryStartKey) ;
