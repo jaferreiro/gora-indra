@@ -52,9 +52,9 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="6" language="java" name="com.twitter.elephantbird.mapred.input.DeprecatedInputFormatWrapper" 
+  <class id="6" language="java" name="com.twitter.elephantbird.mapred.inputdisabled.DeprecatedInputFormatWrapper" 
     project="gora-cascading" 
-    file="/home/indra/.m2/repository/com/twitter/elephantbird/elephant-bird-core/4.2/elephant-bird-core-4.2.jar" 
+    file="/gora-cascading/src/main/java/com/twitter/elephantbird/mapred/inputdisabled/DeprecatedInputFormatWrapper.java" 
     binary="true" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="303" y="638"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 

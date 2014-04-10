@@ -19,7 +19,8 @@ public class ConfigurationUtil {
     public static Configuration toConfiguration(Properties properties) {
         assert properties != null;
         final Configuration config = new Configuration(false);
-        final Enumeration<Object> iter = properties.keys();
+        @SuppressWarnings("unchecked")
+        final Enumeration<String> iter = (Enumeration<String>) properties.propertyNames();
         while (iter.hasMoreElements()) {
             final String key = (String) iter.nextElement();
             final String val = properties.getProperty(key);
