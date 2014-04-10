@@ -132,7 +132,7 @@ public class HadoopWithFilesCopy {
     @Test
     public void identityCopy() throws Exception {
 
-        Properties properties = ConfigurationUtil.toRawProperties(HadoopWithFilesCopy.configuration) ;
+        Properties properties = ConfigurationUtil.toProperties(HadoopWithFilesCopy.configuration) ;
         AppProps.setApplicationJarPath(properties, "target/gora-cascading-0.4-indra-SNAPSHOT-test-jar-with-dependencies.jar") ;
         HadoopWithFilesCopy.configuration = ConfigurationUtil.toConfiguration(properties) ;
         
@@ -176,7 +176,7 @@ public class HadoopWithFilesCopy {
     @Test
     public void incrementField() throws Exception {
 
-        Properties properties = ConfigurationUtil.toRawProperties(HadoopWithFilesCopy.configuration) ;
+        Properties properties = ConfigurationUtil.toProperties(HadoopWithFilesCopy.configuration) ;
         AppProps.setApplicationJarPath(properties, "target/gora-cascading-0.4-indra-SNAPSHOT-test-jar-with-dependencies.jar") ;
         HadoopWithFilesCopy.configuration = ConfigurationUtil.toConfiguration(properties) ;
         

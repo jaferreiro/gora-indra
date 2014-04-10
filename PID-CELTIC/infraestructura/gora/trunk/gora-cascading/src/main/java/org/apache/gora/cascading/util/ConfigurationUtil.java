@@ -1,5 +1,6 @@
 package org.apache.gora.cascading.util;
 
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -8,22 +9,34 @@ import java.util.Properties;
 
 import org.apache.hadoop.conf.Configuration;
 
+/**
+ * Class extracted from org.apache.pig.backend.hadoop.datastorage (copied partially)
+ * @author indra
+ *
+ */
 public class ConfigurationUtil {
 
-    /**
-     * Declares de modes to convert Configuration to Properties, where the value can be
-     * the raw configured, or interpreted variables in values.
-     */
-    public enum ToPropertiesMode { RAW, INTERPRETED } ;
-    
     public static Configuration toConfiguration(Properties properties) {
-        Configuration configuration = new Configuration(false) ;
-        if (properties != null) {
-            for (Entry<Object,Object> entry : properties.entrySet()) {
-                configuration.set((String) entry.getKey(), String.valueOf(entry.getValue())) ;
-            }
+        assert properties != null;
+        final Configuration config = new Configuration(false);
+        final Enumeration<Object> iter = properties.keys();
+        while (iter.hasMoreElements()) {
+            final String key = (String) iter.nextElement();
+            final String val = properties.getProperty(key);
+            config.set(key, val);
         }
-        return configuration ;
+        return config;
+    }
+
+    public static Properties toProperties(Configuration configuration) {
+        Properties properties = new Properties();
+        assert configuration != null;
+        Iterator<Map.Entry<String, String>> iter = configuration.iterator();
+        while (iter.hasNext()) {
+            Map.Entry<String, String> entry = iter.next();
+            properties.put(entry.getKey(), entry.getValue());
+        }
+        return properties;
     }
 
     public static Configuration toConfiguration(Map<Object,Object> map) {
@@ -36,34 +49,6 @@ public class ConfigurationUtil {
         return configuration ;
     }
     
-    public static Properties toProperties(Configuration configuration, ToPropertiesMode mode) {
-        Properties properties = new Properties() ;
-        if (configuration != null) {
-            Iterator<Entry<String,String>> configurationIterator = configuration.iterator() ;
-            while (configurationIterator.hasNext()) {
-                Entry<String,String> entry = configurationIterator.next() ;
-                switch (mode) {
-                    case RAW :
-                        properties.setProperty(entry.getKey(), configuration.getRaw(entry.getKey())) ;
-                        break ;
-                        
-                    case INTERPRETED :
-                        properties.setProperty(entry.getKey(), configuration.get(entry.getKey())) ;
-                        break ;
-                }
-            }
-        }
-        return properties ;
-    }
-    
-    /**
-     * Creates a Properties with raw values (variables not substituted) form Configuration
-     * @param configuration
-     * @return
-     */
-    public static Properties toRawProperties(Configuration configuration) {
-        return toProperties(configuration, ToPropertiesMode.RAW) ;
-    }
 
     public static Map<Object,Object> toRawMap(Configuration configuration) {
         Map<Object,Object> hashMap = new HashMap<Object,Object>(configuration.size());
@@ -71,19 +56,10 @@ public class ConfigurationUtil {
             Iterator<Entry<String,String>> configurationIterator = configuration.iterator() ;
             while (configurationIterator.hasNext()) {
                 Entry<String,String> entry = configurationIterator.next() ;
-                hashMap.put(entry.getKey(), configuration.getRaw(entry.getKey())) ;
+                hashMap.put(entry.getKey(), entry.getValue()) ;
             }
         }
         return hashMap ;
-    }
-    
-    /**
-     * Creates a Properties with values (variables not substituted) form Configuration
-     * @param configuration
-     * @return
-     */
-    public static Properties toInterpretedProperties(Configuration configuration) {
-        return toProperties(configuration, ToPropertiesMode.INTERPRETED) ;
     }
     
     /**
