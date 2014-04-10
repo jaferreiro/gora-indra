@@ -12,7 +12,6 @@ import org.apache.gora.cascading.tap.hadoop.GoraTap;
 import org.apache.gora.cascading.test.storage.TestRow;
 import org.apache.gora.cascading.test.storage.TestRowDest;
 import org.apache.gora.cascading.util.ConfigurationUtil;
-import org.apache.gora.cascading.util.ConfigurationUtil.ToPropertiesMode;
 import org.apache.gora.store.DataStore;
 import org.apache.gora.store.DataStoreFactory;
 import org.apache.gora.util.GoraException;
@@ -134,7 +133,7 @@ public class HadoopCopyTest {
     @Test
     public void identityCopy() throws Exception {
 
-        Properties properties = ConfigurationUtil.toRawProperties(HadoopCopyTest.configuration) ;
+        Properties properties = ConfigurationUtil.toProperties(HadoopCopyTest.configuration) ;
         AppProps.setApplicationJarPath(properties, "target/gora-cascading-0.4-indra-SNAPSHOT-test-jar-with-dependencies.jar") ;
         HadoopCopyTest.configuration = ConfigurationUtil.toConfiguration(properties) ;
         
@@ -178,7 +177,7 @@ public class HadoopCopyTest {
     @Test
     public void incrementField() throws Exception {
 
-        Properties properties = ConfigurationUtil.toRawProperties(HadoopCopyTest.configuration) ;
+        Properties properties = ConfigurationUtil.toProperties(HadoopCopyTest.configuration) ;
         AppProps.setApplicationJarPath(properties, "target/gora-cascading-0.4-indra-SNAPSHOT-test-jar-with-dependencies.jar") ;
         HadoopCopyTest.configuration = ConfigurationUtil.toConfiguration(properties) ;
         
