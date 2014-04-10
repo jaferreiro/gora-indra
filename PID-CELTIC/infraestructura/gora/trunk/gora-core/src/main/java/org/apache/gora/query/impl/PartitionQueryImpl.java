@@ -140,7 +140,7 @@ public String[] getLocations() {
     super.readFields(in);
     
     try {
-      baseQuery = IOUtils.deserialize(getConf(), in, null);
+      baseQuery = IOUtils.deserialize(null, in, null);
     } catch (ClassNotFoundException ex) {
       throw new IOException(ex);
     }

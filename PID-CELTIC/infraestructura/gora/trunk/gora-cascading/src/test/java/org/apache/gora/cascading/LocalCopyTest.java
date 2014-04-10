@@ -5,8 +5,6 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.util.Map;
 
-import org.apache.gora.cascading.tap.hadoop.GoraScheme;
-import org.apache.gora.cascading.tap.hadoop.GoraTap;
 import org.apache.gora.cascading.tap.local.GoraLocalScheme;
 import org.apache.gora.cascading.tap.local.GoraLocalTap;
 import org.apache.gora.cascading.test.storage.TestRow;
@@ -31,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import cascading.flow.Flow;
 import cascading.flow.FlowConnector;
-import cascading.flow.hadoop.HadoopFlowConnector;
 import cascading.flow.local.LocalFlowConnector;
 import cascading.operation.Identity;
 import cascading.pipe.Each;
