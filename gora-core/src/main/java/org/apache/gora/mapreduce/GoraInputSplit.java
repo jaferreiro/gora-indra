@@ -30,7 +30,11 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.InputSplit;
 
 /**
- * InputSplit using {@link PartitionQuery}s. 
+ * InputSplit using {@link PartitionQuery}s.
+ * 
+ * When an instance is configured with {@link #readFields(DataInput)},
+ * the Configuration is set from the incoming {@link DataInput} if this instance
+ * DOES NOT have already a Configuration (is null).
  */
 public class GoraInputSplit extends InputSplit 
   implements Writable, Configurable {
@@ -73,6 +77,9 @@ public class GoraInputSplit extends InputSplit
   @Override
   public void readFields(DataInput in) throws IOException {
     try {
+      Configuration conf = new Configuration(false) ;
+      conf.readFields(in) ;
+      this.setConf(conf) ;
       query = (PartitionQuery<?, ?>) IOUtils.deserialize(conf, in, null);
     } catch (ClassNotFoundException ex) {
       throw new IOException(ex);
@@ -81,6 +88,7 @@ public class GoraInputSplit extends InputSplit
 
   @Override
   public void write(DataOutput out) throws IOException {
+    this.getConf().write(out) ;
     IOUtils.serialize(getConf(), out, query);
   }
   
