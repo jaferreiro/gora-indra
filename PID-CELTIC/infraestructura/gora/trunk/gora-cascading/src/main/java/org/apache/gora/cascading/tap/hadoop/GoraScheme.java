@@ -26,7 +26,7 @@ import cascading.tap.Tap;
 import cascading.tuple.Fields;
 import cascading.tuple.TupleEntry;
 
-import com.twitter.elephantbird.mapred.input.DeprecatedInputFormatWrapper;
+import com.twitter.elephantbird.mapred.input.GoraDeprecatedInputFormatWrapper;
 import com.twitter.elephantbird.mapred.output.DeprecatedOutputFormatWrapper;
 
 @SuppressWarnings("rawtypes")
@@ -134,7 +134,7 @@ public class GoraScheme extends AbstractGoraScheme<JobConf, // Config
         } catch (Exception e) {
             throw new RuntimeException("Failed then configuring GoraInputFormat in the job",e) ;
         }
-        DeprecatedInputFormatWrapper.setInputFormat(GoraInputFormat.class, jobConf) ;
+        GoraDeprecatedInputFormatWrapper.setInputFormat(GoraInputFormat.class, jobConf) ;
     }
 
     @SuppressWarnings("unchecked")
