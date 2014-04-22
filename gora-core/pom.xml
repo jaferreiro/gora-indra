@@ -127,11 +127,6 @@
             <artifactId>commons-lang</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.pig</groupId>
-            <artifactId>pig</artifactId>
-        </dependency>
-    
         <!-- Logging Dependencies -->
         <dependency>
             <groupId>log4j</groupId>
