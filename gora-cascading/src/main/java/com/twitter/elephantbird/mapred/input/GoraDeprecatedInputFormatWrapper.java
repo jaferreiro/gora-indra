@@ -100,8 +100,7 @@ public class GoraDeprecatedInputFormatWrapper<K,V> extends DeprecatedInputFormat
                         null, DeprecatedInputFormatValueCopier.class);
                 if (null != copierClass) {
                     valueCopier = ReflectionUtils.newInstance(copierClass, conf);
-    }
-
+                }
             }
         }
   }
@@ -372,6 +371,10 @@ public class GoraDeprecatedInputFormatWrapper<K,V> extends DeprecatedInputFormat
 
     @SuppressWarnings("unused") // MapReduce instantiates this.
     public InputSplitWrapper() {}
+
+    public InputSplitWrapper(org.apache.hadoop.mapreduce.InputSplit realSplit) {
+        this.realSplit = realSplit;
+      }
 
     public InputSplitWrapper(org.apache.hadoop.mapreduce.InputSplit realSplit, JobConf job) {
       this.realSplit = realSplit;
