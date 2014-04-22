@@ -37,16 +37,16 @@ import cascading.property.AppProps;
 import cascading.tap.Tap;
 import cascading.tuple.Fields;
 
-public class LocalCopyTest {
+public class LocalCopyIT {
 
-    public static final Logger LOG = LoggerFactory.getLogger(LocalCopyTest.class);
+    public static final Logger LOG = LoggerFactory.getLogger(LocalCopyIT.class);
 
     /** The configuration */
     protected static Configuration configuration;
 
     private static HBaseTestingUtility utility;
 
-    public LocalCopyTest() {
+    public LocalCopyIT() {
     }
 
     @BeforeClass
@@ -73,7 +73,7 @@ public class LocalCopyTest {
 
     protected void verifySink(Flow<?> flow, int expects) throws Exception {
 
-        DataStore<String, TestRowDest> dataStore = DataStoreFactory.getDataStore(String.class, TestRowDest.class, LocalCopyTest.configuration);
+        DataStore<String, TestRowDest> dataStore = DataStoreFactory.getDataStore(String.class, TestRowDest.class, LocalCopyIT.configuration);
         org.apache.gora.query.Result<String,TestRowDest> resultDest = dataStore.newQuery().execute() ;
         
         int numResults = 0 ;
@@ -94,7 +94,7 @@ public class LocalCopyTest {
 
     protected void verifyIncrementField(Flow<?> flow, int expects) throws Exception {
 
-        DataStore<String, TestRowDest> dataStore = DataStoreFactory.getDataStore(String.class, TestRowDest.class, LocalCopyTest.configuration);
+        DataStore<String, TestRowDest> dataStore = DataStoreFactory.getDataStore(String.class, TestRowDest.class, LocalCopyIT.configuration);
         org.apache.gora.query.Result<String,TestRowDest> resultDest = dataStore.newQuery().execute() ;
         
         int numResults = 0 ;
@@ -135,7 +135,7 @@ public class LocalCopyTest {
 
     @Before
     public void before() throws GoraException {
-        DataStore<String, TestRow> dataStore = DataStoreFactory.getDataStore(String.class, TestRow.class, LocalCopyTest.configuration);
+        DataStore<String, TestRow> dataStore = DataStoreFactory.getDataStore(String.class, TestRow.class, LocalCopyIT.configuration);
         TestRow t = dataStore.newPersistent();
         t.setDefaultLong1(2); // Campo obligatorio
         t.setDefaultStringEmpty("a"); //Campo obligatorio
@@ -155,9 +155,9 @@ public class LocalCopyTest {
     @Test
     public void copiar() throws Exception {
 
-        Map<Object, Object> properties = ConfigurationUtil.toRawMap(LocalCopyTest.configuration) ;
-        AppProps.setApplicationJarClass(properties, LocalCopyTest.class);
-        LocalCopyTest.configuration = ConfigurationUtil.toConfiguration(properties) ;
+        Map<Object, Object> properties = ConfigurationUtil.toRawMap(LocalCopyIT.configuration) ;
+        AppProps.setApplicationJarClass(properties, LocalCopyIT.class);
+        LocalCopyIT.configuration = ConfigurationUtil.toConfiguration(properties) ;
         
         //deleteTable(configuration, "test");
 
@@ -165,8 +165,8 @@ public class LocalCopyTest {
         
         //esquema.setQueryStartKey(queryStartKey) ;
         
-        Tap<?, ?, ?> origen = new GoraLocalTap(String.class, TestRow.class, esquema, LocalCopyTest.configuration) ;
-        Tap<?, ?, ?> destino = new GoraLocalTap(String.class, TestRowDest.class, esquema, LocalCopyTest.configuration) ;
+        Tap<?, ?, ?> origen = new GoraLocalTap(String.class, TestRow.class, esquema, LocalCopyIT.configuration) ;
+        Tap<?, ?, ?> destino = new GoraLocalTap(String.class, TestRowDest.class, esquema, LocalCopyIT.configuration) ;
 
         Pipe copyPipe = new Each("read", new Identity());
         FlowConnector flowConnector = new LocalFlowConnector(properties) ;
@@ -181,9 +181,9 @@ public class LocalCopyTest {
     @Test
     public void incrementField() throws Exception {
 
-        Map<Object, Object> properties = ConfigurationUtil.toRawMap(LocalCopyTest.configuration) ;
-        AppProps.setApplicationJarClass(properties, LocalCopyTest.class);
-        LocalCopyTest.configuration = ConfigurationUtil.toConfiguration(properties) ;
+        Map<Object, Object> properties = ConfigurationUtil.toRawMap(LocalCopyIT.configuration) ;
+        AppProps.setApplicationJarClass(properties, LocalCopyIT.class);
+        LocalCopyIT.configuration = ConfigurationUtil.toConfiguration(properties) ;
         
         GoraLocalScheme esquema = new GoraLocalScheme() ;
         Tap<?, ?, ?> origen = new GoraLocalTap(String.class, TestRow.class, esquema) ;

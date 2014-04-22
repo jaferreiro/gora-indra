@@ -3,7 +3,6 @@ package org.apache.gora.cascading;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Properties;
 
 import junit.framework.Assert;
@@ -40,32 +39,32 @@ import cascading.tap.Tap;
 import cascading.tuple.Fields;
 import cascading.tuple.TupleEntryIterator;
 
-public class HadoopWithFilesCopy {
+public class HadoopCopyIT {
 
-    public static final Logger LOG = LoggerFactory.getLogger(HadoopWithFilesCopy.class);
+    public static final Logger LOG = LoggerFactory.getLogger(HadoopCopyIT.class);
 
     /** The configuration */
     protected static Configuration configuration;
 
     private static HBaseTestingUtility utility;
     
-    public HadoopWithFilesCopy() {
+    public HadoopCopyIT() {
     }
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
-/*        System.setProperty(HBaseTestingUtility.TEST_DIRECTORY_KEY, "build/test-data");
+        System.setProperty(HBaseTestingUtility.TEST_DIRECTORY_KEY, "build/test-data");
         Configuration localExecutionConfiguration = new Configuration() ;
         localExecutionConfiguration.setStrings("hadoop.log.dir", localExecutionConfiguration.get("hadoop.tmp.dir")) ;
         utility = new HBaseTestingUtility(localExecutionConfiguration);
         utility.startMiniCluster(1);
         utility.startMiniMapReduceCluster(1) ;
         configuration = utility.getConfiguration();
-*/    }
+    }
 
     @AfterClass
     public static void tearDownAfterClass() throws Exception {
-//        utility.shutdownMiniCluster();
+        utility.shutdownMiniCluster();
     }
     
     protected static void deleteTable(String tableName) throws IOException {
@@ -112,7 +111,7 @@ public class HadoopWithFilesCopy {
 
     @Before
     public void before() throws GoraException {
-        DataStore<String, TestRow> dataStore = DataStoreFactory.getDataStore(String.class, TestRow.class, new Configuration());
+        DataStore<String, TestRow> dataStore = DataStoreFactory.getDataStore(String.class, TestRow.class, HadoopCopyIT.configuration);
         TestRow t = dataStore.newPersistent();
         t.setDefaultLong1(2); // Campo obligatorio
         t.setDefaultStringEmpty("a"); //Campo obligatorio
@@ -132,9 +131,9 @@ public class HadoopWithFilesCopy {
     @Test
     public void identityCopy() throws Exception {
 
-        Properties properties = ConfigurationUtil.toProperties(HadoopWithFilesCopy.configuration) ;
+        Properties properties = ConfigurationUtil.toProperties(HadoopCopyIT.configuration) ;
         AppProps.setApplicationJarPath(properties, "target/gora-cascading-0.4-indra-SNAPSHOT-test-jar-with-dependencies.jar") ;
-        HadoopWithFilesCopy.configuration = ConfigurationUtil.toConfiguration(properties) ;
+        HadoopCopyIT.configuration = ConfigurationUtil.toConfiguration(properties) ;
         
         GoraScheme esquema = new GoraScheme() ;
         esquema.setSourceAsPersistent(true) ;
@@ -154,7 +153,7 @@ public class HadoopWithFilesCopy {
     }
 
     private void verifyValuesCopy() throws IOException, Exception {
-        DataStore<String, TestRow> dataStore = DataStoreFactory.getDataStore(String.class, TestRow.class, new Configuration());
+        DataStore<String, TestRow> dataStore = DataStoreFactory.getDataStore(String.class, TestRow.class, HadoopCopyIT.configuration);
         org.apache.gora.query.Result<String,TestRow> resultDest = dataStore.newQuery().execute() ;
         
         int numResults = 0 ;
@@ -176,9 +175,9 @@ public class HadoopWithFilesCopy {
     @Test
     public void incrementField() throws Exception {
 
-        Properties properties = ConfigurationUtil.toProperties(HadoopWithFilesCopy.configuration) ;
+        Properties properties = ConfigurationUtil.toProperties(HadoopCopyIT.configuration) ;
         AppProps.setApplicationJarPath(properties, "target/gora-cascading-0.4-indra-SNAPSHOT-test-jar-with-dependencies.jar") ;
-        HadoopWithFilesCopy.configuration = ConfigurationUtil.toConfiguration(properties) ;
+        HadoopCopyIT.configuration = ConfigurationUtil.toConfiguration(properties) ;
         
         GoraScheme esquema = new GoraScheme() ;
         Tap<?, ?, ?> origen = new GoraTap(String.class, TestRow.class, esquema) ;
@@ -194,28 +193,8 @@ public class HadoopWithFilesCopy {
         verifyValuesIncrement() ;
     }
 
-    @Test
-    public void incrementFieldWithConfigFiles() throws Exception {
-
-        Map<Object,Object> properties = new Properties() ;
-        AppProps.setApplicationJarPath(properties, "target/gora-cascading-0.4-indra-SNAPSHOT-test-jar-with-dependencies.jar") ;
-        
-        GoraScheme esquema = new GoraScheme() ;
-        Tap<?, ?, ?> origen = new GoraTap(String.class, TestRow.class, esquema) ;
-        Tap<?, ?, ?> destino = new GoraTap(String.class, TestRow.class, esquema) ;
-
-        Pipe insertPipe = new Each("insert", new Fields("defaultLong1"), new IncrementField(new Fields("unionLong")), Fields.REPLACE) ;
-        FlowConnector flowConnector = new HadoopFlowConnector(properties) ;
-        Flow copyFlow = flowConnector.connect(origen, destino, insertPipe);
-
-        copyFlow.complete();
-
-        verifySink(copyFlow, 2);
-        verifyValuesIncrement() ;
-    }
-    
     private void verifyValuesIncrement() throws IOException, Exception {
-        DataStore<String, TestRow> dataStore = DataStoreFactory.getDataStore(String.class, TestRow.class, HadoopWithFilesCopy.configuration);
+        DataStore<String, TestRow> dataStore = DataStoreFactory.getDataStore(String.class, TestRow.class, HadoopCopyIT.configuration);
         org.apache.gora.query.Result<String,TestRow> resultDest = dataStore.newQuery().execute() ;
         
         int numResults = 0 ;
