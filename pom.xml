@@ -473,7 +473,7 @@
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <outputDirectory>lib</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -656,11 +656,11 @@
         <module>gora-hbase</module>
         <module>gora-accumulo</module>
         <module>gora-cassandra</module>
-        <module>gora-dynamodb</module>
+        <!-- <module>gora-dynamodb</module> -->
         <!-- <module>gora-sql</module> -->
-        <!--<module>gora-tutorial</module> -->
+        <!-- <module>gora-tutorial</module> -->
         <module>sources-dist</module>
-    <module>gora-pig</module>
+        <module>gora-pig</module>
   </modules>
 
     <properties>
