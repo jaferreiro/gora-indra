@@ -654,8 +654,8 @@
         <module>gora-core</module>
         <module>gora-cascading</module>
         <module>gora-hbase</module>
-        <module>gora-accumulo</module>
-        <module>gora-cassandra</module>
+        <!-- <module>gora-accumulo</module> -->
+        <!-- <module>gora-cassandra</module> -->
         <!-- <module>gora-dynamodb</module> -->
         <!-- <module>gora-sql</module> -->
         <!-- <module>gora-tutorial</module> -->
