@@ -473,7 +473,7 @@
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>lib</outputDirectory>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -667,7 +667,8 @@
         <!-- Dependencies -->
         <osgi.version>4.2.0</osgi.version>
         <!-- Avro Dependencies -->
-        <jackson.version>1.4.2</jackson.version>
+<!--         <jackson.version>1.4.2</jackson.version> -->
+        <jackson.version>1.7.1</jackson.version>
         <!-- Hadoop Dependencies -->
         <hadoop.version>1.0.4</hadoop.version>
         <hadoop.test.version>1.0.4</hadoop.test.version>
@@ -690,7 +691,9 @@
         <xalan.version>2.7.1</xalan.version>
 
         <!-- Pig Dependencies -->
-        <pig.version>0.11.0</pig.version>
+        <pig.version>0.11.1</pig.version>
+        <automaton.version>1.11-8</automaton.version>
+        <antlr.version>3.4-beta4</antlr.version>
 
         <!-- Cascading Dependencies -->
         <cascading.version>2.5.1</cascading.version>
@@ -968,6 +971,7 @@
                 <version>${xalan.version}</version>
             </dependency>
 
+            <!-- Pig -->
             <dependency>
                 <groupId>org.apache.pig</groupId>
                 <artifactId>pig</artifactId>
@@ -979,7 +983,22 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-
+            
+            <dependency>
+                <groupId>dk.brics.automaton</groupId>
+                <artifactId>automaton</artifactId>
+                <version>${automaton.version}</version>
+                <scope>test</scope>
+            </dependency>
+            
+            <dependency>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr-runtime</artifactId>
+                <version>${antlr.version}</version>
+                <scope>test</scope>
+            </dependency>
+            
+            <!-- Cascading -->
             <dependency>
                 <groupId>cascading</groupId>
                 <artifactId>cascading-core</artifactId>
