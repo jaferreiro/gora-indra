@@ -684,6 +684,7 @@
         <!-- Misc Dependencies -->
         <guava.version>10.0.1</guava.version>
         <commons-lang.version>2.6</commons-lang.version>
+        <commons-io.version>2.4</commons-io.version>
         <jdom.version>1.1.2</jdom.version>
         <hsqldb.version>2.2.8</hsqldb.version>
         <mysql.version>5.1.18</mysql.version>
@@ -995,6 +996,13 @@
                 <groupId>org.antlr</groupId>
                 <artifactId>antlr-runtime</artifactId>
                 <version>${antlr.version}</version>
+                <scope>test</scope>
+            </dependency>
+            
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons-io.version}</version>
                 <scope>test</scope>
             </dependency>
             
