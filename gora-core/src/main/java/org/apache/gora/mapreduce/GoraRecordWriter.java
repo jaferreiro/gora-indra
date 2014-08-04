@@ -73,4 +73,19 @@ public class GoraRecordWriter<K, T> extends RecordWriter<K, T> {
 		  LOG.info("Exception at GoraRecordWriter.class while writing to datastore." + e.getMessage());
 	  }
   }
+  
+  public void delete(K key) throws IOException {
+      try{
+        store.delete(key) ;
+
+        counter.increment();
+        if (counter.isModulo()) {
+          LOG.info("Flushing the datastore after " + counter.getRecordsNumber() + " records");
+          store.flush();
+        }
+      }catch(Exception e){
+          LOG.info("Exception at GoraRecordWriter#delete() while writing to datastore." + e.getMessage());
+      }
+  }
+  
 }
