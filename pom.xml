@@ -682,7 +682,7 @@
         <libthrift.version>0.7.0</libthrift.version>
         <hector.version>1.1-0</hector.version>
         <!-- Misc Dependencies -->
-        <guava.version>10.0.1</guava.version>
+        <guava.version>11.0</guava.version>
         <commons-lang.version>2.6</commons-lang.version>
         <commons-io.version>2.4</commons-io.version>
         <jdom.version>1.1.2</jdom.version>
@@ -692,9 +692,9 @@
         <xalan.version>2.7.1</xalan.version>
 
         <!-- Pig Dependencies -->
-        <pig.version>0.11.1</pig.version>
+        <pig.version>0.12.1</pig.version>
         <automaton.version>1.11-8</automaton.version>
-        <antlr.version>3.4-beta4</antlr.version>
+        <antlr.version>3.4</antlr.version>
 
         <!-- Cascading Dependencies -->
         <cascading.version>2.5.1</cascading.version>
