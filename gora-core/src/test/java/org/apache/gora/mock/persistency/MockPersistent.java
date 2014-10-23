@@ -20,7 +20,7 @@ package org.apache.gora.mock.persistency;
 
 import org.apache.avro.Schema;
 import org.apache.gora.persistency.Persistent;
-import org.apache.gora.persistency.StateManager;
+import org.apache.gora.persistency.Tombstone;
 import org.apache.gora.persistency.impl.PersistentBase;
 
 public class MockPersistent extends PersistentBase {
@@ -36,9 +36,6 @@ public class MockPersistent extends PersistentBase {
   public MockPersistent() {
   }
   
-  public MockPersistent(StateManager stateManager) {
-    super(stateManager);
-  }
   
   @Override
   public Object get(int field) {
@@ -59,7 +56,8 @@ public class MockPersistent extends PersistentBase {
 
   @Override
   public Schema getSchema() {
-    return Schema.parse("{\"type\":\"record\",\"name\":\"MockPersistent\",\"namespace\":\"org.apache.gora.mock.persistency\",\"fields\":[{\"name\":\"foo\",\"type\":\"int\"},{\"name\":\"baz\",\"type\":\"int\"}]}");
+    Schema.Parser parser = new Schema.Parser();
+    return parser.parse("{\"type\":\"record\",\"name\":\"MockPersistent\",\"namespace\":\"org.apache.gora.mock.persistency\",\"fields\":[{\"name\":\"foo\",\"type\":\"int\"},{\"name\":\"baz\",\"type\":\"int\"}]}");
   }
   
   public void setFoo(int foo) {
@@ -79,22 +77,13 @@ public class MockPersistent extends PersistentBase {
   }
 
   @Override
-  public String getField(int index) {
-    return null;
+  public Tombstone getTombstone() {
+    return new Tombstone(){};
   }
 
   @Override
-  public int getFieldIndex(String field) {
-    return 0;
+  public Persistent newInstance() {
+    return new MockPersistent();
   }
 
-  @Override
-  public String[] getFields() {
-    return null;
-  }
-
-  @Override
-  public Persistent newInstance(StateManager stateManager) {
-    return new MockPersistent(stateManager);
-  }
 }

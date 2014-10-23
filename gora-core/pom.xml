@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.apache.gora</groupId>
         <artifactId>gora</artifactId>
-        <version>0.4-indra-SNAPSHOT</version>
+        <version>0.4</version>
         <relativePath>../</relativePath>
     </parent>
     <artifactId>gora-core</artifactId>
@@ -39,9 +39,9 @@
     	<url>http://www.apache.org/</url>
     </organization>
     <scm>
-    	<url>http://svn.apache.org/viewvc/gora/trunk/gora-core/</url>
-    	<connection>scm:svn:http://svn.apache.org/repos/asf/gora/trunk/gora-core/</connection>
-    	<developerConnection>scm:svn:https://svn.apache.org/repos/asf/gora/trunk/gora-core/</developerConnection>
+    	<url>http://svn.apache.org/viewvc/gora/tags/apache-gora-0.4/gora-core</url>
+    	<connection>scm:svn:http://svn.apache.org/repos/asf/gora/tags/apache-gora-0.4/gora-core</connection>
+    	<developerConnection>scm:svn:https://svn.apache.org/repos/asf/gora/tags/apache-gora-0.4/gora-core</developerConnection>
     </scm>
     <issueManagement>
     	<system>JIRA</system>
@@ -83,6 +83,15 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>org.apache.gora.compiler.GoraCompiler</mainClass>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>../lib/</classpathPrefix>
+                        </manifest>
+                    </archive>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -90,9 +99,9 @@
                 <version>${build-helper-maven-plugin.version}</version>
                 <executions>
                     <execution>
-                        <phase>generate-sources</phase>
+                        <phase>generate-test-sources</phase>
                         <goals>
-                            <goal>add-source</goal>
+                            <goal>add-test-source</goal>
                         </goals>
                         <configuration>
                             <sources>
@@ -118,13 +127,23 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.hadoop</groupId>
+            <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro-mapred</artifactId>
         </dependency>
 
         <dependency>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
         </dependency>
 
         <!-- Logging Dependencies -->
@@ -149,7 +168,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <scope>test</scope>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>

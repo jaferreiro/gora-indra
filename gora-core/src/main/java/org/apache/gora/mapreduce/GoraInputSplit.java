@@ -30,11 +30,7 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.InputSplit;
 
 /**
- * InputSplit using {@link PartitionQuery}s.
- * 
- * When an instance is configured with {@link #readFields(DataInput)},
- * the Configuration is set from the incoming {@link DataInput} if this instance
- * DOES NOT have already a Configuration (is null).
+ * InputSplit using {@link PartitionQuery}s. 
  */
 public class GoraInputSplit extends InputSplit 
   implements Writable, Configurable {

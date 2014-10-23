@@ -19,8 +19,12 @@
 package org.apache.gora.cassandra.query;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import me.prettyprint.cassandra.serializers.IntegerSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.HSuperColumn;
@@ -29,10 +33,8 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.util.Utf8;
-import org.apache.gora.cassandra.serializers.Utf8Serializer;
-import org.apache.gora.persistency.ListGenericArray;
-import org.apache.gora.persistency.StatefulHashMap;
-import org.apache.gora.persistency.impl.BeanFactoryImpl;
+import org.apache.gora.cassandra.serializers.CharSequenceSerializer;
+import org.apache.gora.cassandra.store.CassandraStore;
 import org.apache.gora.persistency.impl.PersistentBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,80 +48,146 @@ public class CassandraSuperColumn extends CassandraColumn {
     return StringSerializer.get().toByteBuffer(hSuperColumn.getName());
   }
 
+ private Object getSuperValue(Field field, Schema fieldSchema, Type type){
+    Object value = null;
+    
+    switch (type) {
+      case ARRAY:
+        List<Object> array = new ArrayList<Object>();
+        
+        for (HColumn<ByteBuffer, ByteBuffer> hColumn : this.hSuperColumn.getColumns()) {
+          Object memberValue = fromByteBuffer(fieldSchema.getElementType(), hColumn.getValue());
+          // int i = IntegerSerializer().get().fromByteBuffer(hColumn.getName());
+          array.add(memberValue);      
+        }
+        value = array;
+        
+        break;
+      case MAP:
+        Map<CharSequence, Object> map = new HashMap<CharSequence, Object>();
+
+        for (HColumn<ByteBuffer, ByteBuffer> hColumn : this.hSuperColumn.getColumns()) {
+          CharSequence mapKey = CharSequenceSerializer.get().fromByteBuffer(hColumn.getName());
+          if (mapKey.toString().indexOf(CassandraStore.UNION_COL_SUFIX) < 0) {
+            Object memberValue = null;
+            // We need detect real type for UNION Fields
+            if (fieldSchema.getValueType().getType().equals(Type.UNION)){
+              
+              HColumn<ByteBuffer, ByteBuffer> cc = getUnionTypeColumn(mapKey
+                  + CassandraStore.UNION_COL_SUFIX, this.hSuperColumn.getColumns());
+              Integer unionIndex = getUnionIndex(mapKey.toString(), cc);
+              Schema realSchema = fieldSchema.getValueType().getTypes().get(unionIndex);
+              memberValue = fromByteBuffer(realSchema, hColumn.getValue());
+              
+            }else{
+              memberValue = fromByteBuffer(fieldSchema.getValueType(), hColumn.getValue());            
+            }            
+            map.put(mapKey, memberValue);      
+          }
+        }
+        value = map;
+        
+        break;
+      case RECORD:
+        String fullName = fieldSchema.getFullName();
+        
+        Class<?> claz = null;
+        try {
+          claz = Class.forName(fullName);
+        } catch (ClassNotFoundException cnfe) {
+          LOG.warn("Unable to load class " + fullName, cnfe);
+          break;
+        }
+
+        try {
+          value = claz.newInstance();          
+        } catch (InstantiationException ie) {
+          LOG.warn("Instantiation error", ie);
+          break;
+        } catch (IllegalAccessException iae) {
+          LOG.warn("Illegal access error", iae);
+          break;
+        }
+        
+        // we updated the value instance, now update its members
+        if (value instanceof PersistentBase) {
+          PersistentBase record = (PersistentBase) value;
+
+          for (HColumn<ByteBuffer, ByteBuffer> hColumn : this.hSuperColumn.getColumns()) {
+            String memberName = StringSerializer.get().fromByteBuffer(hColumn.getName());
+            if (memberName.indexOf(CassandraStore.UNION_COL_SUFIX) < 0) {
+              
+            if (memberName == null || memberName.length() == 0) {
+              LOG.warn("member name is null or empty.");
+              continue;
+            }
+            Field memberField = fieldSchema.getField(memberName);
+            Schema memberSchema = memberField.schema();
+            Type memberType = memberSchema.getType();
+            
+            CassandraSubColumn cassandraColumn = new CassandraSubColumn();
+            cassandraColumn.setField(memberField);
+            cassandraColumn.setValue(hColumn);
+            
+            if (memberType.equals(Type.UNION)){
+              HColumn<ByteBuffer, ByteBuffer> hc = getUnionTypeColumn(memberField.name()
+                  + CassandraStore.UNION_COL_SUFIX, this.hSuperColumn.getColumns().toArray());
+              Integer unionIndex = getUnionIndex(memberField.name(),hc);
+              cassandraColumn.setUnionType(unionIndex);
+            }
+            
+            record.put(record.getSchema().getField(memberName).pos(), cassandraColumn.getValue());
+          }
+          }
+        }
+        break;
+      case UNION:
+        int schemaPos = this.getUnionType();
+        Schema unioSchema = fieldSchema.getTypes().get(schemaPos);
+        Type unionType = unioSchema.getType();
+        value = getSuperValue(field, unioSchema, unionType);
+        break;
+      default:
+        Object memberValue = null;
+        // Using for UnionIndex of Union type field get value. UnionIndex always Integer.  
+        for (HColumn<ByteBuffer, ByteBuffer> hColumn : this.hSuperColumn.getColumns()) {
+          memberValue = fromByteBuffer(fieldSchema, hColumn.getValue());      
+        }
+        value = memberValue;
+        LOG.warn("Type: " + type.name() + " not supported for field: " + field.name());
+    }
+    return value;
+  }
+
+ private Integer getUnionIndex(String fieldName, HColumn<ByteBuffer, ByteBuffer> uc){
+   Integer val = IntegerSerializer.get().fromByteBuffer(uc.getValue());
+   return Integer.parseInt(val.toString());
+ }
+ 
+  private HColumn<ByteBuffer, ByteBuffer> getUnionTypeColumn(String fieldName,
+    List<HColumn<ByteBuffer, ByteBuffer>> columns) {
+    return getUnionTypeColumn(fieldName, columns.toArray());
+}
+
+  private HColumn<ByteBuffer, ByteBuffer> getUnionTypeColumn(String fieldName, Object[] hColumns) {
+    for (int iCnt = 0; iCnt < hColumns.length; iCnt++){
+      @SuppressWarnings("unchecked")
+      HColumn<ByteBuffer, ByteBuffer> hColumn = (HColumn<ByteBuffer, ByteBuffer>)hColumns[iCnt];
+      String columnName = StringSerializer.get().fromByteBuffer(hColumn.getNameBytes().duplicate());
+      if (fieldName.equals(columnName))
+        return hColumn;
+    }
+    return null;
+}
+
   public Object getValue() {
     Field field = getField();
     Schema fieldSchema = field.schema();
     Type type = fieldSchema.getType();
     
-    switch (type) {
-      case ARRAY:
-        ListGenericArray<Object> array = new ListGenericArray<Object>(fieldSchema.getElementType());
-        
-        for (HColumn<ByteBuffer, ByteBuffer> hColumn : this.hSuperColumn.getColumns()) {
-          Object memberValue = fromByteBuffer(fieldSchema.getElementType(), hColumn.getValue());
-          array.add(memberValue);      
-        }
-        return array ;
-
-      case MAP:
-        Map<Utf8, Object> map = new StatefulHashMap<Utf8, Object>();
-        
-        for (HColumn<ByteBuffer, ByteBuffer> hColumn : this.hSuperColumn.getColumns()) {
-          Object memberValue = fromByteBuffer(fieldSchema.getValueType(), hColumn.getValue());
-          map.put(Utf8Serializer.get().fromByteBuffer(hColumn.getName()), memberValue);      
-        }
-        return map ;
-
-      case UNION:
-        // In supercolumns, unions MUST be ["NULL","TYPE"], since 3-types should be serialized in a column (and then will be subcolumn)
-        // TODO EXCEPTION or LOG+NULL? At this point seems to be returning NULLs for invalid values. To comment at jira
-
-        // If no column was retrieved, then is null
-        if (this.hSuperColumn.getSize() == 0) {
-          return null ;
-        }
-
-        // Else record. Get the proper schema
-        Type type0 = fieldSchema.getTypes().get(0).getType() ;
-            
-        // Precondition: schema = ["null","type"] or ["type","null"]
-        if (type0.equals(Schema.Type.NULL)) {
-          // Schema 0 = [null], so schema will be 1.
-          fieldSchema = fieldSchema.getTypes().get(1) ;
-        } else {
-          // Schema 1 = [null], so schema will be 0.
-          fieldSchema = fieldSchema.getTypes().get(0) ;
-        }
-        // We continue as a record
-        
-      case RECORD:
-        PersistentBase newRecord;
-        try {
-          newRecord = BeanFactoryImpl.newPersistent(fieldSchema);
-        } catch (Exception e) {
-          LOG.warn("Error creating an instance of {}", fieldSchema.getFullName(), e) ;
-          return null ;
-        }
-  
-        for (HColumn<ByteBuffer, ByteBuffer> hColumn : this.hSuperColumn.getColumns()) {
-          String memberName = StringSerializer.get().fromByteBuffer(hColumn.getName());
-          if (memberName == null || memberName.length() == 0) {
-            LOG.warn("member name is null or empty for hColumn.");
-            continue;
-          }
-          Field memberField = fieldSchema.getField(memberName);
-          CassandraSubColumn cassandraColumn = new CassandraSubColumn();
-          cassandraColumn.setField(memberField);
-          cassandraColumn.setValue(hColumn);
-          newRecord.put(newRecord.getFieldIndex(memberName), cassandraColumn.getValue());
-        }
-        return newRecord ;
-
-      default:
-        LOG.info("Type not supported: " + type);
-        return null ;
-    }
-
+    Object value = getSuperValue(field, fieldSchema, type);
+    
+    return value;
   }
 
   public void setValue(HSuperColumn<String, ByteBuffer, ByteBuffer> hSuperColumn) {

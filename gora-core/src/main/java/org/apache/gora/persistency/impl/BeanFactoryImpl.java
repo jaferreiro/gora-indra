@@ -19,12 +19,9 @@
 package org.apache.gora.persistency.impl;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 
-import org.apache.avro.Schema;
 import org.apache.gora.persistency.BeanFactory;
 import org.apache.gora.persistency.Persistent;
-import org.apache.gora.persistency.StateManager;
 import org.apache.gora.util.ReflectionUtils;
 
 /**
@@ -34,16 +31,29 @@ import org.apache.gora.util.ReflectionUtils;
  */
 public class BeanFactoryImpl<K, T extends Persistent> implements BeanFactory<K, T> {
 
+  /** Class of the key to be used */
   private Class<K> keyClass;
+  
+  /** Class of the persistent objects to be stored */
   private Class<T> persistentClass;
   
+  /** Constructor of the key */
   private Constructor<K> keyConstructor;
   
+  /** Object's key */
   private K key;
+  
+  /** Persistent object of class T */
   private T persistent;
   
+  /** Flag to be used to determine if a key is persistent or not */
   private boolean isKeyPersistent = false;
   
+  /**
+   * Default constructor for this class.
+   * @param keyClass.
+   * @param persistentClass
+   */
   public BeanFactoryImpl(Class<K> keyClass, Class<T> persistentClass) {
     this.keyClass = keyClass;
     this.persistentClass = persistentClass;
@@ -53,7 +63,7 @@ public class BeanFactoryImpl<K, T extends Persistent> implements BeanFactory<K, 
         this.keyConstructor = ReflectionUtils.getConstructor(keyClass);
         this.key = keyConstructor.newInstance(ReflectionUtils.EMPTY_OBJECT_ARRAY);
       }
-      this.persistent = ReflectionUtils.newInstance(this.persistentClass, StateManager.class, new StateManagerImpl());
+      this.persistent = ReflectionUtils.newInstance(persistentClass);
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
@@ -62,37 +72,13 @@ public class BeanFactoryImpl<K, T extends Persistent> implements BeanFactory<K, 
   }
   
   @Override
-  @SuppressWarnings("unchecked")
   public K newKey() throws Exception {
-    if(isKeyPersistent)
-      return (K)((Persistent)key).newInstance(new StateManagerImpl());
-    else if(keyConstructor == null) {
-      throw new RuntimeException("Key class does not have a no-arg constructor");
-    }
-    else
-      return keyConstructor.newInstance(ReflectionUtils.EMPTY_OBJECT_ARRAY);
+    return keyClass.newInstance();
   }
  
-  @SuppressWarnings("unchecked")
   @Override
   public T newPersistent() {
-    return (T) persistent.newInstance(new StateManagerImpl());
-  }
-
-  /**
-   * Creates a Bean defined in the schema (schema of a record!). 
-   * @param schema
-   * @throws InvocationTargetException 
-   * @throws NoSuchMethodException 
-   * @throws ClassNotFoundException 
-   * @throws IllegalAccessException 
-   * @throws InstantiationException 
-   * @throws IllegalArgumentException 
-   * @throws SecurityException 
-   */
-  public static PersistentBase newPersistent(Schema schema) throws SecurityException, IllegalArgumentException, InstantiationException, IllegalAccessException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException {
-    String className = schema.getFullName() ;
-    return (PersistentBase) ReflectionUtils.newInstance(className, StateManager.class, new StateManagerImpl()); 
+    return (T) persistent.newInstance();
   }
   
   @Override

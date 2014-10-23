@@ -23,15 +23,21 @@ import org.apache.gora.hbase.store.HBaseStore;
 import org.apache.gora.hbase.util.HBaseClusterSingleton;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
-//HBase imports
 
 /**
  * Helper class for third part tests using gora-hbase backend. 
  * @see GoraTestDriver
  */
 public class GoraHBaseTestDriver extends GoraTestDriver {
+
+  /**
+   * Cluster object used for testing.
+   */
   private static final HBaseClusterSingleton cluster = HBaseClusterSingleton.build(1);
 
+  /**
+   * Default Constructor.
+   */
   public GoraHBaseTestDriver() {
     super(HBaseStore.class);
   }
@@ -39,6 +45,7 @@ public class GoraHBaseTestDriver extends GoraTestDriver {
   @Override
   public void setUpClass() throws Exception {
     super.setUpClass();
+    conf = getConf();
     log.info("Setting up HBase Test Driver");
   }
 
@@ -47,28 +54,40 @@ public class GoraHBaseTestDriver extends GoraTestDriver {
     super.tearDownClass();
     log.info("Teardown HBase test driver");
   }
-  
+
   @Override
   public void setUp() throws Exception {
     cluster.truncateAllTables();
     // super.setUp() deletes all tables, but must only truncate in the right way -HBaseClusterSingleton-
     //super.setUp();
   }
-  
+
   @Override
   public void tearDown() throws Exception {
     // Do nothing. setUp() must ensure the right data.
   }
+
+  /**
+   * Deletes all tables from the MiniCluster
+   * @throws Exception in case some table is not able to be deleted.
+   */
   public void deleteAllTables() throws Exception {
     cluster.deleteAllTables();
   }
-  
+
+  /**
+   * Gets the configuration from the MiniCluster.
+   * @return Configuration from MiniCluster.
+   */
   public Configuration getConf() {
     return cluster.getHbaseTestingUtil().getConfiguration();
   }
-  
+
+  /**
+   * Gets HBaseTestingUtility from the MiniCluster object.
+   * @return HBaseTestingUtility object
+   */
   public HBaseTestingUtility getHbaseUtil() {
     return cluster.getHbaseTestingUtil();
   }
-  
-}		
+}

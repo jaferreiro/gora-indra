@@ -19,7 +19,6 @@ package org.apache.gora.store;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -57,7 +56,7 @@ public class DataStoreFactory{
 
   public static final String MAPPING_FILE = "mapping.file";
 
-    public static final String SCHEMA_NAME = "schema.name";
+  public static final String SCHEMA_NAME = "schema.name";
 
   /**
    * Do not use! Deprecated because it shares system wide state. 
@@ -65,7 +64,7 @@ public class DataStoreFactory{
    */
   @Deprecated()
   public static final Properties properties = createProps();
-  
+
   /**
    * Creates a new {@link Properties}. It adds the default gora configuration
    * resources. This properties object can be modified and used to instantiate
@@ -76,15 +75,9 @@ public class DataStoreFactory{
    */
   public static Properties createProps() {
     try {
-    Properties properties = new Properties();
-      if (log.isDebugEnabled()){
-          log.debug("Class loader: {}", DataStoreFactory.class.getClassLoader().getClass()) ;
-          URL propertiesURL = DataStoreFactory.class.getClassLoader().getResource(GORA_DEFAULT_PROPERTIES_FILE) ;
-          if (propertiesURL != null) {
-              log.debug("Properties file found: {}", propertiesURL.getPath()) ;
-          }
-      }
-      InputStream stream = DataStoreFactory.class.getClassLoader().getResourceAsStream(GORA_DEFAULT_PROPERTIES_FILE);
+      Properties properties = new Properties();
+      InputStream stream = DataStoreFactory.class.getClassLoader()
+          .getResourceAsStream(GORA_DEFAULT_PROPERTIES_FILE);
       if(stream != null) {
         try {
           properties.load(stream);
@@ -157,11 +150,11 @@ public class DataStoreFactory{
   public static <D extends DataStore<K,T>, K, T extends Persistent>
   D createDataStore(Class<D> dataStoreClass, Class<K> keyClass
       , Class<T> persistent, Configuration conf, Properties properties, String schemaName) 
-  throws GoraException {
+          throws GoraException {
     try {
       setDefaultSchemaName(properties, schemaName);
       D dataStore =
-        ReflectionUtils.newInstance(dataStoreClass);
+          ReflectionUtils.newInstance(dataStoreClass);
       if ((dataStore instanceof Configurable) && conf != null) {
         ((Configurable)dataStore).setConf(conf);
       }
@@ -189,7 +182,7 @@ public class DataStoreFactory{
   public static <D extends DataStore<K,T>, K, T extends Persistent>
   D createDataStore(Class<D> dataStoreClass
       , Class<K> keyClass, Class<T> persistent, Configuration conf, Properties properties) 
-  throws GoraException {
+          throws GoraException {
     return createDataStore(dataStoreClass, keyClass, persistent, conf, properties, null);
   }
 
@@ -223,10 +216,10 @@ public class DataStoreFactory{
   @SuppressWarnings("unchecked")
   public static <K, T extends Persistent> DataStore<K, T> getDataStore(
       String dataStoreClass, Class<K> keyClass, Class<T> persistentClass, Configuration conf)
-      throws GoraException {
+          throws GoraException {
     try {
       Class<? extends DataStore<K,T>> c
-        = (Class<? extends DataStore<K, T>>) Class.forName(dataStoreClass);
+          = (Class<? extends DataStore<K, T>>) Class.forName(dataStoreClass);
       return createDataStore(c, keyClass, persistentClass, conf, createProps(), null);
     } catch(GoraException ex) {
       throw ex;
@@ -248,7 +241,7 @@ public class DataStoreFactory{
   @SuppressWarnings({ "unchecked" })
   public static <K, T extends Persistent> DataStore<K, T> getDataStore(
       String dataStoreClass, String keyClass, String persistentClass, Configuration conf)
-    throws GoraException {
+          throws GoraException {
 
     try {
       Class<? extends DataStore<K,T>> c
@@ -340,7 +333,7 @@ public class DataStoreFactory{
     String val = findProperty(properties, store, baseKey, null);
     if(val == null) {
       throw new IOException("Property with base name \""+baseKey+"\" could not be found, make " +
-            "sure to include this property in gora.properties file");
+          "sure to include this property in gora.properties file");
     }
     return val;
   }
@@ -369,9 +362,28 @@ public class DataStoreFactory{
     return findProperty(properties, store, OUTPUT_PATH, null);
   }
 
+  /**
+   * Looks for the <code>gora-&lt;classname&gt;-mapping.xml</code> as a resource 
+   * on the classpath. This can however also be specified within the 
+   * <code>gora.properties</code> file with the key 
+   * <code>gora.&lt;classname&gt;.mapping.file=</code>.
+   * @param properties which hold keys from which we can obtain values for datastore mappings.
+   * @param store {@link org.apache.gora.store.DataStore} object to get the mapping for.
+   * @param defaultValue default value for the <code>gora-&lt;classname&gt;-mapping.xml</code>
+   * @return mappingFilename if one is located.
+   * @throws IOException if there is a problem reading or obtaining the mapping file.
+   */
   public static String getMappingFile(Properties properties, DataStore<?,?> store
-      , String defaultValue) {
-    return findProperty(properties, store, MAPPING_FILE, defaultValue);
+      , String defaultValue) throws IOException {
+
+    String mappingFilename = findProperty(properties, store, MAPPING_FILE, defaultValue);
+
+    InputStream mappingFile = store.getClass().getClassLoader().getResourceAsStream(mappingFilename);
+
+    if (mappingFile == null)
+      throw new IOException("Unable to open mapping file: "+mappingFilename);
+
+    return mappingFilename;
   }
 
   private static String getDefaultDataStore(Properties properties) {

@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.apache.gora</groupId>
         <artifactId>gora</artifactId>
-        <version>0.4-indra-SNAPSHOT</version>
+        <version>0.4</version>
         <relativePath>../</relativePath>
     </parent>
     <artifactId>gora-tutorial</artifactId>
@@ -39,9 +39,9 @@
     	<url>http://www.apache.org/</url>
     </organization>
     <scm>
-    	<url>http://svn.apache.org/viewvc/gora/trunk/gora-tutorial/</url>
-    	<connection>scm:svn:http://svn.apache.org/repos/asf/gora/trunk/gora-tutorial/</connection>
-    	<developerConnection>scm:svn:https://svn.apache.org/repos/asf/gora/trunk/gora-tutorial/</developerConnection>
+    	<url>http://svn.apache.org/viewvc/gora/tags/apache-gora-0.4/gora-tutorial</url>
+    	<connection>scm:svn:http://svn.apache.org/repos/asf/gora/tags/apache-gora-0.4/gora-tutorial</connection>
+    	<developerConnection>scm:svn:https://svn.apache.org/repos/asf/gora/tags/apache-gora-0.4/gora-tutorial</developerConnection>
     </scm>
     <issueManagement>
     	<system>JIRA</system>
@@ -111,19 +111,24 @@
             <artifactId>gora-cassandra</artifactId>
         </dependency>
 
-        <dependency>
+        <!--dependency>
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-sql</artifactId>
         </dependency>
 
-		<!-- Hadoop Dependencies -->
-		<dependency>
+        <dependency>
+            <groupId>org.apache.gora</groupId>
+            <artifactId>gora-solr</artifactId>
+        </dependency-->
+
+	<!-- Hadoop Dependencies -->
+	<dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-core</artifactId>
         </dependency>
         
         <dependency>
-            <groupId>org.apache.hadoop</groupId>
+            <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
         </dependency>
         
@@ -155,7 +160,7 @@
             </exclusions>
         </dependency>
 		
-        <dependency>
+        <!--dependency>
             <groupId>org.hsqldb</groupId>
             <artifactId>hsqldb</artifactId>
         </dependency>
@@ -163,7 +168,7 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-        </dependency>
+        </dependency-->
     </dependencies>
 
 </project>

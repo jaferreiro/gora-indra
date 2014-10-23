@@ -2,9 +2,72 @@
  ==CHANGES.txt
  =======================================================================
 
-Gora Change Log
+Gora 0.4 release: (14/04/2014)
+Release Report: http://s.apache.org/4lx
 
-* GORA-223 Verify storage and retrieval of Avro Union data type in nested structures within Gora-Cassandra (alfonsonishikawa)
+* GORA-201 Upgrade HBase to 0.94.13 (various)
+
+* GORA-292 Upgrade dependency to Accumulo 1.5 (Akber Choudhry via lewismc)
+
+* GORA-245 Upgrade to Avro 1.7.X in gora-cassandra (lewismc, Talat, Uyarer, rmarroquin)
+
+* GORA-94 Upgrade to Apache Avro 1.7.x (Ed Kohlwey, lewismc, ferdy, yasin tamer, alparslanavci, Talat Uyarer, rmarroquin)
+
+* GORA-106 Migrate Gora website documentation to Apache CMS (lewismc)
+
+* GORA-296 Improve 'Keyclass and nameclass match' logging in HBaseStore (rmarroquin via lewismc)
+
+* GORA-246 Upgrade to Avro 1.7.X in gora-hbase (Alparslan Avcı, rmarroquin, lewismc via lewismc)
+
+* GORA-154 delete() method is not implemented at CassandraStore, and always returns false or 0 (rmarroquin via Kazuomi Kashii)
+
+* GORA-204 Don't store empty arrays in CassandraClient#addGenericArray(), addStatefulHashMap() and CassandraStore#addOrUpdateField(rmarroquin via lewismc)
+
+* GORA-303 Upgrade to Avro 1.7.X in gora-solr (Talat UYARER)
+
+* GORA-253 Add Facebook, Linkedin, Google+, Twitter, etc plugins to website (lewismc)
+
+* GORA-244 Upgrade to Avro 1.7.X in gora-accumulo (Akber Choudhry via lewismc)
+
+* GORA-306 Ssn field is not nullable in Employee's Avro Schema (Talat UYARER via lewismc)
+
+* GORA-171 Implement Daily Rolling File Appender for localised Gora logging (lewismc)
+
+* GORA-119 implement a filter enabled scan in gora (ferdy, kturner, enis, Tien Nguyen Manh via lewismc)
+
+* GORA-231 Provide better error handling in AccumuloStore.readMapping when file does not exist. (apgiannakidis via lewismc)
+
+* GORA-283 Specify field name for types not being considered in gora-cassandra (lewismc)
+
+* GORA-285 Change logging at o.a.g.mapreduce.GoraRecordWriter from INFO to WARN (lewismc)
+
+* GORA-117 gora hbase does not have a mechanism to set the caching on a scanner, which makes for poor performance on map/reduce jobs (alfonsonishikawa)
+
+* GORA-281 More flexible file locations for cassandra's config and log4j (Nate McCall via hsaputra)
+
+* GORA-275 Update Gora stores to pass conf when creating instance of PartitionQueryImpl (Damien Raude-Morvan via hsaputra)
+
+* GORA-270 IOUtils static SerializationFactory field (Damien Raude-Morvan via hsaputra)
+
+* GORA-268 Make GoraCompiler the main manifest attribute in gora-core (Apostolos Giannakidis via lewismc)
+
+* GORA-265 Support for dynamic file extensions when traversing a directory (Apostolos Giannakidis via lewismc)
+
+* GORA-264 Make generated data beans more java doc friendly (Apostolos Giannakidis via lewismc)
+
+* GORA-222 upgrade jackson version to 1.6.9 (rherget via lewismc)
+
+* GORA-232 DataStoreTestBase should delegate all functionality to DataStoreTestUtil (Apostolos Giannakidis via lewismc)
+
+* GORA-259 Removal of the main methods from the test case classes (Apostolos via hsaputra)
+
+* GORA-229 Use @Ignore for unimplemented functionality to identify absent tests (Apostolos Giannakidis via lewismc)
+
+* GORA-258 writeCapacUnits gets value from wrong attribute (Apostolos Giannakidis via lewismc)
+
+* GORA-256 Add Solr store to gora-tutorial (Scott Stults via lewismc)
+
+* GORA-9 Implement a Solr-based store (ab, lewismc, Scott Stults)
 
 * GORA-237 Gora Compiler usage message for LPGL v3 mentions v2.1 (David Medinets via lewismc)
 

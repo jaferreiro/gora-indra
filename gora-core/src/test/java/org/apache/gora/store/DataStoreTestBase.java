@@ -19,18 +19,11 @@
 package org.apache.gora.store;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-
-import junit.framework.Assert;
-
-import org.apache.avro.util.Utf8;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.gora.GoraTestDriver;
 import org.apache.gora.examples.generated.Employee;
-import org.apache.gora.examples.generated.Metadata;
 import org.apache.gora.examples.generated.WebPage;
-import org.apache.gora.store.DataStore;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -57,7 +50,7 @@ public abstract class DataStoreTestBase {
 
   @Deprecated
   protected abstract DataStore<String,WebPage> createWebPageDataStore() throws IOException;
-  
+
 
   /** junit annoyingly forces BeforeClass to be static, so this method
    * should be called from a static block
@@ -67,7 +60,7 @@ public abstract class DataStoreTestBase {
   }
 
   private static boolean setUpClassCalled = false;
-  
+
   @BeforeClass
   public static void setUpClass() throws Exception {
     if(testDriver != null && !setUpClassCalled) {
@@ -88,12 +81,12 @@ public abstract class DataStoreTestBase {
   @Before
   public void setUp() throws Exception {
     //There is an issue in JUnit 4 tests in Eclipse where TestSqlStore static
-    //methods are not called BEFORE setUpClass. I think this is a bug in 
+    //methods are not called BEFORE setUpClass. I think this is a bug in
     //JUnitRunner in Eclipse. Below is a workaround for that problem.
     if(!setUpClassCalled) {
-    	setUpClass();  
+      setUpClass();
     }
-    
+
     log.info("setting up test");
     if(testDriver != null) {
       employeeStore = testDriver.createDataStore(String.class, Employee.class);
@@ -131,7 +124,9 @@ public abstract class DataStoreTestBase {
     assertSchemaExists("Employee");
   }
 
+
   // Override this to assert that schema is created correctly
+
   public void assertSchemaExists(String schemaName) throws Exception {
   }
 
@@ -178,44 +173,13 @@ public abstract class DataStoreTestBase {
   @Test
   public void testPutNested() throws IOException, Exception {
     log.info("test method: testPutNested");
-
-    String revUrl = "foo.com:http/";
-    String url = "http://foo.com/";
-
-    webPageStore.createSchema();
-    WebPage page = webPageStore.newPersistent();
-    Metadata metadata = new Metadata();  
-    metadata.setVersion(1);
-    metadata.putToData(new Utf8("foo"), new Utf8("baz"));
-
-    page.setMetadata(metadata);
-    page.setUrl(new Utf8(url));
-
-    webPageStore.put(revUrl, page);
-    webPageStore.flush();
-
-    page = webPageStore.get(revUrl);
-    metadata = page.getMetadata();
-    Assert.assertNotNull(metadata);
-    Assert.assertEquals(1, metadata.getVersion());
-    Assert.assertEquals(new Utf8("baz"), metadata.getData().get(new Utf8("foo")));
+    DataStoreTestUtil.testPutNested(webPageStore);
   }
 
   @Test
   public void testPutArray() throws IOException, Exception {
     log.info("test method: testPutArray");
-    webPageStore.createSchema();
-    WebPage page = webPageStore.newPersistent();
-
-    String[] tokens = {"example", "content", "in", "example.com"};
-
-    for(String token: tokens) {
-      page.addToParsedContent(new Utf8(token));
-    }
-
-    webPageStore.put("com.example/http", page);
-    webPageStore.close();
-
+    DataStoreTestUtil.testPutArray(webPageStore);
     assertPutArray();
   }
 
@@ -225,16 +189,7 @@ public abstract class DataStoreTestBase {
   @Test
   public void testPutBytes() throws IOException, Exception {
     log.info("test method: testPutBytes");
-    webPageStore.createSchema();
-    WebPage page = webPageStore.newPersistent();
-    page.setUrl(new Utf8("http://example.com"));
-    byte[] contentBytes = "example content in example.com".getBytes();
-    ByteBuffer buff = ByteBuffer.wrap(contentBytes);
-    page.setContent(buff);
-
-    webPageStore.put("com.example/http", page);
-    webPageStore.close();
-
+    byte[] contentBytes = DataStoreTestUtil.testPutBytes(webPageStore);
     assertPutBytes(contentBytes);
   }
 
@@ -244,17 +199,7 @@ public abstract class DataStoreTestBase {
   @Test
   public void testPutMap() throws IOException, Exception {
     log.info("test method: testPutMap");
-    webPageStore.createSchema();
-
-    WebPage page = webPageStore.newPersistent();
-
-    page.setUrl(new Utf8("http://example.com"));
-    page.putToOutlinks(new Utf8("http://example2.com"), new Utf8("anchor2"));
-    page.putToOutlinks(new Utf8("http://example3.com"), new Utf8("anchor3"));
-    page.putToOutlinks(new Utf8("http://example3.com"), new Utf8("anchor4"));
-    webPageStore.put("com.example/http", page);
-    webPageStore.close();
-
+    DataStoreTestUtil.testPutMap(webPageStore);
     assertPutMap();
   }
 
@@ -265,7 +210,11 @@ public abstract class DataStoreTestBase {
   public void testUpdate() throws IOException, Exception {
     log.info("test method: testUpdate");
     DataStoreTestUtil.testUpdateEmployee(employeeStore);
-    DataStoreTestUtil.testUpdateWebPage(webPageStore);
+    DataStoreTestUtil.testUpdateWebPagePutToArray(webPageStore);
+    DataStoreTestUtil.testUpdateWebPagePutToNotNullableMap(webPageStore);
+    DataStoreTestUtil.testUpdateWebPagePutToNullableMap(webPageStore);
+    DataStoreTestUtil.testUpdateWebPageRemoveMapEntry(webPageStore);
+    DataStoreTestUtil.testUpdateWebPageRemoveField(webPageStore);
   }
 
   public void testEmptyUpdate() throws IOException, Exception {
@@ -292,7 +241,7 @@ public abstract class DataStoreTestBase {
 
   @Test
   /**
-   * Tests put and get a record with a double  nested recursive record
+   * Tests put and get a record with a double nested recursive record
    * Employee with a boss (nested).
    * @throws IOException
    * @throws Exception
@@ -301,11 +250,12 @@ public abstract class DataStoreTestBase {
     log.info("test method: testGetDoubleRecursive") ;
     DataStoreTestUtil.testGetEmployeeDoubleRecursive(employeeStore) ;
   }
-  
+
   @Test
   /**
-   * Tests put and get a record with a nested record (not recursive)
-   * The webpage of an Employee
+   * Tests put and get of an {@link org.apache.gora.examples.generated.Employee} 
+   * record with a nested {@link org.apache.gora.examples.generated.WegPage} record (not recursive)
+   * the webpage of an Employee.
    * @throws IOException
    * @throws Exception
    */
@@ -313,7 +263,7 @@ public abstract class DataStoreTestBase {
     log.info("test method: testGetNested") ;
     DataStoreTestUtil.testGetEmployeeNested(employeeStore) ;
   }
-  
+
   @Test
   /**
    * Tests put and get a record with a 3 types union, and
@@ -325,7 +275,7 @@ public abstract class DataStoreTestBase {
     log.info("test method: testGet3UnionField") ;
     DataStoreTestUtil.testGetEmployee3UnionField(employeeStore) ;
   }
-  
+
   @Test
   public void testGetWithFields() throws IOException, Exception {
     log.info("test method: testGetWithFields");

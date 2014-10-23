@@ -20,6 +20,7 @@ package org.apache.gora.hbase.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -28,54 +29,57 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.apache.avro.util.Utf8;
+
 import org.apache.gora.examples.generated.Employee;
 import org.apache.gora.examples.generated.Metadata;
-import org.apache.gora.examples.generated.TokenDatum;
-import org.junit.Assert;
+
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 
 public class TestHBaseByteInterface {
 
-  private static final Random RANDOM = new Random();
+  private static final Random RANDOM = new Random(0);
 
   @Test
   public void testEncodingDecoding() throws Exception {
     for (int i=0; i < 1000; i++) {
     
       //employer
-      Utf8 name = new Utf8("john");
+      CharSequence name = (CharSequence) new Utf8("john");
       long dateOfBirth = System.currentTimeMillis();
       int salary = 1337;
-      Utf8 ssn = new Utf8(String.valueOf(RANDOM.nextLong()));
+      CharSequence ssn = (CharSequence) new Utf8(String.valueOf(RANDOM.nextLong()));
       
-      Employee e = new Employee();
+      Employee e = Employee.newBuilder().build();
       e.setName(name);
       e.setDateOfBirth(dateOfBirth);
       e.setSalary(salary);
       e.setSsn(ssn);
       
-      byte[] employerBytes = HBaseByteInterface.toBytes(e, Employee._SCHEMA);
-      Employee e2 = (Employee) HBaseByteInterface.fromBytes(Employee._SCHEMA, 
+      byte[] employerBytes = HBaseByteInterface.toBytes(e, Employee.SCHEMA$);
+      Employee e2 = (Employee) HBaseByteInterface.fromBytes(Employee.SCHEMA$, 
           employerBytes);
       
-      Assert.assertEquals(name, e2.getName());
-      Assert.assertEquals(dateOfBirth, e2.getDateOfBirth());
-      Assert.assertEquals(salary, e2.getSalary());
-      Assert.assertEquals(ssn, e2.getSsn());
+      assertEquals(name, e2.getName());
+      assertEquals(dateOfBirth, e2.getDateOfBirth().longValue());
+      assertEquals(salary, e2.getSalary().intValue());
+      assertEquals(ssn, e2.getSsn());
       
       
       //metadata
-      Utf8 key = new Utf8("theKey");
-      Utf8 value = new Utf8("theValue " + RANDOM.nextLong());
+      CharSequence key = (CharSequence) new Utf8("theKey");
+      CharSequence value = (CharSequence) new Utf8("theValue " + RANDOM.nextLong());
+      HashMap<CharSequence, CharSequence> data = new HashMap<CharSequence, CharSequence>();
+      data.put(key, value);
+      Metadata m = Metadata.newBuilder().build();
+      m.setData(data);
       
-      Metadata m = new Metadata();
-      m.putToData(key, value);
-      
-      byte[] datumBytes = HBaseByteInterface.toBytes(m, Metadata._SCHEMA);
-      Metadata m2 = (Metadata) HBaseByteInterface.fromBytes(Metadata._SCHEMA, 
+      byte[] datumBytes = HBaseByteInterface.toBytes(m, Metadata.SCHEMA$);
+      Metadata m2 = (Metadata) HBaseByteInterface.fromBytes(Metadata.SCHEMA$, 
           datumBytes);
       
-      Assert.assertEquals(value, m2.getFromData(key));
+      assertEquals(value, m2.getData().get(key));
     }
   }
   
@@ -109,7 +113,7 @@ public class TestHBaseByteInterface {
 
     // check results
     for (Future<Integer> result : results) {
-      Assert.assertEquals(0, (int) result.get());
+      assertEquals(0, (int) result.get());
     }
   }
 

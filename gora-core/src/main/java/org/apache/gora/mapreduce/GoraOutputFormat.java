@@ -77,7 +77,7 @@ public class GoraOutputFormat<K, T extends Persistent>
   }
 
   @Override
-  @SuppressWarnings({ "unchecked", "rawtypes" })
+  @SuppressWarnings("unchecked")
   public RecordWriter<K, T> getRecordWriter(TaskAttemptContext context)
       throws IOException, InterruptedException {
     Configuration conf = context.getConfiguration();

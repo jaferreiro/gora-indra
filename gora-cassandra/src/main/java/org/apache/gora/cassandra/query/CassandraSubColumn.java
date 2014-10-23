@@ -19,41 +19,22 @@
 package org.apache.gora.cassandra.query;
 
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetEncoder;
+import java.util.List;
+import java.util.Map;
 
-import me.prettyprint.cassandra.serializers.FloatSerializer;
-import me.prettyprint.cassandra.serializers.DoubleSerializer;
-import me.prettyprint.cassandra.serializers.IntegerSerializer;
-import me.prettyprint.cassandra.serializers.LongSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.beans.HColumn;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
-import org.apache.avro.generic.GenericArray;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.util.Utf8;
-import org.apache.gora.cassandra.serializers.GenericArraySerializer;
-import org.apache.gora.cassandra.serializers.GoraSerializerTypeInferer;
-import org.apache.gora.cassandra.serializers.StatefulHashMapSerializer;
-import org.apache.gora.cassandra.serializers.TypeUtils;
+import org.apache.gora.cassandra.serializers.ListSerializer;
+import org.apache.gora.cassandra.serializers.MapSerializer;
 import org.apache.gora.cassandra.store.CassandraStore;
-import org.apache.gora.persistency.StatefulHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class CassandraSubColumn extends CassandraColumn {
   public static final Logger LOG = LoggerFactory.getLogger(CassandraSubColumn.class);
-
-  private static final String ENCODING = "UTF-8";
-  
-  private static CharsetEncoder charsetEncoder = Charset.forName(ENCODING).newEncoder();;
-
 
   /**
    * Key-value pair containing the raw data.
@@ -64,6 +45,32 @@ public class CassandraSubColumn extends CassandraColumn {
     return hColumn.getName();
   }
 
+  private Object getFieldValue(Type type, Schema fieldSchema, ByteBuffer byteBuffer){
+    Object value = null;
+    if (type.equals(Type.ARRAY)) {
+      ListSerializer<?> serializer = ListSerializer.get(fieldSchema.getElementType());
+      List<?> genericArray = serializer.fromByteBuffer(byteBuffer);
+      value = genericArray;
+    } else if (type.equals(Type.MAP)) {
+//      MapSerializer<?> serializer = MapSerializer.get(fieldSchema.getValueType());
+//      Map<?, ?> map = serializer.fromByteBuffer(byteBuffer);
+//      value = map;
+      value = fromByteBuffer(fieldSchema, byteBuffer);
+    } else if (type.equals(Type.RECORD)){
+      value = fromByteBuffer(fieldSchema, byteBuffer);
+    } else if (type.equals(Type.UNION)){
+      // the selected union schema is obtained
+      Schema unionFieldSchema = getUnionSchema(super.getUnionType(), fieldSchema);
+      Type unionFieldType = unionFieldSchema.getType();
+      // we use the selected union schema to deserialize our actual value
+      //value = fromByteBuffer(unionFieldSchema, byteBuffer);
+      value = getFieldValue(unionFieldType, unionFieldSchema, byteBuffer);
+    } else {
+      value = fromByteBuffer(fieldSchema, byteBuffer);
+    }
+    return value;
+  }
+
   /**
    * Deserialize a String into an typed Object, according to the field schema.
    * @see org.apache.gora.cassandra.query.CassandraColumn#getValue()
@@ -71,32 +78,28 @@ public class CassandraSubColumn extends CassandraColumn {
   public Object getValue() {
     Field field = getField();
     Schema fieldSchema = field.schema();
+    Type type = fieldSchema.getType();
     ByteBuffer byteBuffer = hColumn.getValue();
     if (byteBuffer == null) {
       return null;
     }
 
-    // XXX TOP LEVEL UNION
-    // If schema is an optional field (this is ["null","type"]), consider it as ["type"]        
-    if (fieldSchema.getType().equals(Type.UNION)) {
-      if (fieldSchema.getTypes().size() == 2) {
-        
-        // schema [type0, type1]
-        Type type0 = fieldSchema.getTypes().get(0).getType() ;
-        Type type1 = fieldSchema.getTypes().get(1).getType() ;
-        
-        // Check if types are different and there's a "null", like ["null","type"] or ["type","null"]
-        if (!type0.equals(type1) && type0.equals(Schema.Type.NULL)) {
-          // Schema 0 = [null], so schema will be 1.
-          fieldSchema = fieldSchema.getTypes().get(1) ;
-        } else if (!type0.equals(type1) && type1.equals(Schema.Type.NULL)) {
-          // Schema 1 = [null], so schema will be 0.
-          fieldSchema = fieldSchema.getTypes().get(0) ;
-        }
-      }
-    }
-
-    return fromByteBuffer(fieldSchema, byteBuffer) ;
+    Object value = getFieldValue(type, fieldSchema, byteBuffer);
+    return value;
+  }
+  
+  /**
+   * Gets the specific schema for a union data type
+   * @param pSchemaPos
+   * @param pSchema
+   * @return
+   */
+  private Schema getUnionSchema (int pSchemaPos, Schema pSchema){
+    Schema unionSchema = pSchema.getTypes().get(pSchemaPos);
+    // default union element
+    if ( unionSchema == null )
+      pSchema.getTypes().get(CassandraStore.DEFAULT_UNION_SCHEMA);
+    return unionSchema;
   }
 
   public void setValue(HColumn<ByteBuffer, ByteBuffer> hColumn) {

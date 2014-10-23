@@ -42,4 +42,17 @@ public class CassandraRow<K> extends ArrayList<CassandraColumn> {
     this.key = key;
   }
   
+  /**
+   * Gets a specific CassandraColumn within a row using its name
+   * @param pCassandraColumnName
+   * @return CassandraColumn
+   */
+  public CassandraColumn getCassandraColumn(String pCassandraColumnName){
+    for (CassandraColumn cColumn: this)
+      if ( pCassandraColumnName.equals(StringSerializer.get().fromByteBuffer(cColumn.getName())) )
+        return cColumn;
+    
+    return null;
+  }
+
 }

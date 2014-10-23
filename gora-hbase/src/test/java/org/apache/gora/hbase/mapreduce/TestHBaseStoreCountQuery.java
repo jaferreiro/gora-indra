@@ -18,7 +18,6 @@
 
 package org.apache.gora.hbase.mapreduce;
 
-import org.apache.gora.examples.generated.TokenDatum;
 import org.apache.gora.examples.generated.WebPage;
 import org.apache.gora.hbase.store.HBaseStore;
 import org.apache.gora.hbase.util.HBaseClusterSingleton;
@@ -52,11 +51,5 @@ public class TestHBaseStoreCountQuery {
   @Test
   public void testCountQuery() throws Exception {
     MapReduceTestUtils.testCountQuery(webPageStore, cluster.getConf());
-  }
-
-  public static void main(String[] args) throws Exception {
-   TestHBaseStoreCountQuery test =  new TestHBaseStoreCountQuery();
-   test.setUp();
-   test.testCountQuery();
   }
 }

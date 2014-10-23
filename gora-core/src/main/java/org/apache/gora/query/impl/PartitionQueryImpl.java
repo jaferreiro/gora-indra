@@ -23,6 +23,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.apache.gora.filter.Filter;
 import org.apache.gora.persistency.impl.PersistentBase;
 import org.apache.gora.query.PartitionQuery;
 import org.apache.gora.query.Query;
@@ -127,20 +128,29 @@ public String[] getLocations() {
   public void setLimit(long limit) {
     baseQuery.setLimit(limit);
   }
+  
+  @Override
+  public Filter<K, T> getFilter() {
+    return baseQuery.getFilter();
+  }
+  
+  @Override
+  public void setFilter(Filter<K, T> filter) {
+    baseQuery.setFilter(filter);
+  }
 
   @Override
   public void write(DataOutput out) throws IOException {
     super.write(out);
-    IOUtils.serialize(null, out, baseQuery);
+    IOUtils.serialize(getConf(), out, baseQuery);
     IOUtils.writeStringArray(out, locations);
   }
 
   @Override
   public void readFields(DataInput in) throws IOException {
     super.readFields(in);
-    
     try {
-      baseQuery = IOUtils.deserialize(null, in, null);
+      baseQuery = IOUtils.deserialize(getConf(), in, null);
     } catch (ClassNotFoundException ex) {
       throw new IOException(ex);
     }

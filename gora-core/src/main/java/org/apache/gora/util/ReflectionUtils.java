@@ -20,6 +20,10 @@ package org.apache.gora.util;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+import org.apache.avro.specific.SpecificRecordBuilderBase;
+import org.apache.gora.persistency.Persistent;
 
 /**
  * Utility methods related to reflection
@@ -38,19 +42,6 @@ public class ReflectionUtils {
       throw new IllegalArgumentException("class cannot be null");
     }
     Constructor<T> cons = clazz.getConstructor(EMPTY_CLASS_ARRAY);
-    cons.setAccessible(true);
-    return cons;
-  }
-
-  /**
-   * Returns the empty argument constructor of the class.
-   */
-  public static<T> Constructor<T> getConstructor(Class<T> clazz, Class<?> argClass) 
-    throws SecurityException, NoSuchMethodException {
-    if(clazz == null) {
-      throw new IllegalArgumentException("class cannot be null");
-    }
-    Constructor<T> cons = clazz.getConstructor(argClass);
     cons.setAccessible(true);
     return cons;
   }
@@ -88,22 +79,6 @@ public class ReflectionUtils {
     
     return cons.newInstance(EMPTY_OBJECT_ARRAY);
   }
-
-  /**
-   * Constructs a new instance of the class using a one-arg constructor.
-   * @param clazz the class of the object
-   * @param constructorArgSpec type of the parameter of the constructor to use
-   * @param constructorArg Instance to pass as parameter to the constructor
-   * @return a new instance of the object
-   */
-  public static <T> T newInstance(Class<T> clazz, Class<?> constructorArgSpec, Object constructorArg) throws InstantiationException
-  , IllegalAccessException, SecurityException, NoSuchMethodException
-  , IllegalArgumentException, InvocationTargetException {
-    
-    Constructor<T> cons = getConstructor(clazz, constructorArgSpec);
-    
-    return cons.newInstance(constructorArg);
-  }
   
   /**
    * Constructs a new instance of the class using the no-arg constructor.
@@ -119,23 +94,6 @@ public class ReflectionUtils {
     Class<?> clazz = ClassLoadingUtils.loadClass(classStr);
     return newInstance(clazz);
   }
-
-  /**
-   * Constructs a new instance of the class using a one-arg constructor.
-   * @param classStr the class name of the object
-   * @param constructorArgSpec type of the parameter of the constructor to use
-   * @param constructorArg Instance to pass as parameter to the constructor
-   * @return a new instance of the object
-   */
-  public static Object newInstance(String classStr, Class<?> constructorArgSpec, Object constructorArg) throws InstantiationException
-    , IllegalAccessException, ClassNotFoundException, SecurityException
-    , IllegalArgumentException, NoSuchMethodException, InvocationTargetException {
-    if(classStr == null) {
-      throw new IllegalArgumentException("class cannot be null");
-    }
-    Class<?> clazz = ClassLoadingUtils.loadClass(classStr);
-    return newInstance(clazz, constructorArgSpec, constructorArg);
-  }
   
   /**
    * Returns the value of a named static field
@@ -146,4 +104,10 @@ public class ReflectionUtils {
     
     return clazz.getField(fieldName).get(null);
   }
+  
+  public static <T extends Persistent> SpecificRecordBuilderBase<T> classBuilder(Class<T> clazz) throws SecurityException
+    , NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+    return (SpecificRecordBuilderBase<T>) clazz.getMethod("newBuilder").invoke(null);
+  }
+  
 }
