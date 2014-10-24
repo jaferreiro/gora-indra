@@ -26,7 +26,7 @@
     <groupId>org.apache.gora</groupId>
     <artifactId>gora</artifactId>
     <packaging>pom</packaging>
-    <version>0.4</version>
+    <version>0.4-indra</version>
     <name>Apache Gora</name>
     <description>The Apache Gora open source framework provides an in-memory data model and 
     persistence for big data. Gora supports persisting to column stores, key value stores, 
@@ -34,6 +34,19 @@
     support. </description>
     <url>http://gora.apache.org</url>
     <inceptionYear>2010</inceptionYear>
+    
+    <distributionManagement>
+        <repository>
+            <id>celtic</id>
+            <name>artifactory-releases</name>
+            <url>http://88.3.208.228:8080/artifactory/libs-release-local</url>
+        </repository>
+        <snapshotRepository>
+            <id>celtic</id>
+            <name>artifactory-snapshots</name>
+            <url>http://88.3.208.228:8080/artifactory/libs-snapshot-local</url>
+        </snapshotRepository>
+    </distributionManagement>
     
     <licenses>
       <license>
@@ -253,19 +266,6 @@
     <system>Jenkins</system>
     <url>https://builds.apache.org/job/Gora-trunk/</url>
   </ciManagement>
-  
-  <distributionManagement>
-    <repository>
-      <id>apache.releases.https</id>
-      <name>Apache Release Distribution Repository</name>
-      <url>https://repository.apache.org/service/local/staging/deploy/maven2</url>
-    </repository>
-    <snapshotRepository>
-      <id>apache.snapshots.https</id>
-      <name>Apache Development Snapshot Repository</name>
-      <url>https://repository.apache.org/content/repositories/snapshots</url>
-    </snapshotRepository>
-  </distributionManagement>
   
   <repositories>
     <repository>
