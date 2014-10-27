@@ -308,6 +308,14 @@ implements Configurable {
       }
       break;
     case ARRAY:
+      // if it's a map that has been modified, then the content should be replaced by the new one
+      // This is because we don't know if the content has changed or not.
+      if (qualifier == null) {
+        delete.deleteFamily(hcol.getFamily());
+      } else {
+        delete.deleteColumn(hcol.getFamily(), qualifier);
+      }
+
       List<?> array = (List<?>) o;
       int j = 0;
       for (Object item : array) {
