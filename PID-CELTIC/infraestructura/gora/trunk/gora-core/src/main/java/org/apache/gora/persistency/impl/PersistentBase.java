@@ -20,6 +20,7 @@ package org.apache.gora.persistency.impl;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.avro.Schema.Field;
 import org.apache.avro.specific.SpecificData;
@@ -53,6 +54,9 @@ public abstract class PersistentBase extends SpecificRecordBase implements
 
   }
 
+  public abstract Map<String,Integer> getFields2IndexMapping() ;
+  public abstract Map<Integer,String> getIndex2FiedsMapping() ;
+  
   @Override
   public void clearDirty() {
     ByteBuffer dirtyBytes = getDirtyBytes();
