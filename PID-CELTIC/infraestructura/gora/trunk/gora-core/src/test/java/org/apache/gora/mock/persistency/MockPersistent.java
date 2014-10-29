@@ -18,6 +18,10 @@
 
 package org.apache.gora.mock.persistency;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.avro.Schema;
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.persistency.Tombstone;
@@ -30,6 +34,21 @@ public class MockPersistent extends PersistentBase {
   
   public static final String[] _ALL_FIELDS = {FOO, BAZ};
 
+  private static final Map<String, Integer> FIELD2INDEX_MAP ;
+  private static final Map<Integer, String> INDEX2FIELD_MAP ;
+
+  static {
+      Map<String,Integer> field2Index = new HashMap<String,Integer>(6) ;
+              field2Index.put("foo", 0) ;
+              field2Index.put("baz", 1) ;
+              FIELD2INDEX_MAP = Collections.unmodifiableMap(field2Index) ;
+      
+      Map<Integer, String> index2Field = new HashMap<Integer,String>(6) ;
+              index2Field.put(0, "foo") ;
+              index2Field.put(1, "baz") ;
+              INDEX2FIELD_MAP = Collections.unmodifiableMap(index2Field) ;
+    }
+  
   /**
    * Gets the total field count.
    */
@@ -43,6 +62,15 @@ public class MockPersistent extends PersistentBase {
   public MockPersistent() {
   }
   
+  @Override
+  public Map<String, Integer> getField2IndexMapping() {
+    return FIELD2INDEX_MAP ;
+  }
+
+  @Override
+  public Map<Integer, String> getIndex2FieldMapping() {
+    return INDEX2FIELD_MAP ;
+  }
   
   @Override
   public Object get(int field) {
