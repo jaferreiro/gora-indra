@@ -38,6 +38,6 @@ GORA_BIN=$GORA_HOME/bin/gora
 
 for f in `ls $DIR` ; do
   echo "Compiling $DIR$f"
-  $GORA_BIN compile $DIR$f $OUTDIR 
+  $GORA_BIN goracompiler $DIR$f $OUTDIR 
 done
 

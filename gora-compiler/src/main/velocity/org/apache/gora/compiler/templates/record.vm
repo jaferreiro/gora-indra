@@ -37,7 +37,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
     Map<String,Integer> field2Index = new HashMap<String,Integer>(${schema.getFields().size()}) ;
     #set ($i = 0)
     #foreach ($field in $schema.getFields())
-    field2Index.put($field.name(), $i) ;
+    field2Index.put("$field.name()", $i) ;
     #set ($i = $i + 1)
     #end
     FIELD2INDEX_MAP = Collections.unmodifiableMap(field2Index) ;
@@ -45,7 +45,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
     Map<Integer, String> index2Field = new HashMap<Integer,String>(${schema.getFields().size()}) ;
     #set ($i = 0)
     #foreach ($field in $schema.getFields())
-    index2Field.put($i, $field.name()) ;
+    index2Field.put($i, "$field.name()") ;
     #set ($i = $i + 1)
     #end
     INDEX2FIELD_MAP = Collections.unmodifiableMap(index2Field) ;
