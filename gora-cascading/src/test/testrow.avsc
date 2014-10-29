@@ -1,0 +1,16 @@
+{"name": "TestRow",
+ "type": "record",
+ "namespace": "org.apache.gora.cascading.test.storage",
+ "fields": [
+        {"name": "defaultLong1",       "type": "long", "default": 1},
+        {"name": "defaultStringEmpty", "type": "string"},
+        {"name": "columnLong",         "type": ["null","long"]},
+        {"name": "unionRecursive",     "type": ["null","TestRow"]},
+        {"name": "unionString",        "type": ["null","string"]},
+        {"name": "unionLong",          "type": ["null","long"]},
+        {"name": "unionDefNull",       "type": ["null","long"]},
+        
+        {"name": "family2",            "type": {"type": "map", "values":"string"}}
+
+   ]
+}

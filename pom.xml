@@ -601,6 +601,8 @@
         <module>gora-compiler-cli</module>
         <module>gora-core</module>
         <module>gora-hbase</module>
+        <module>gora-pig</module>
+        <module>gora-cascading</module>
         <!--<module>gora-accumulo</module>-->
         <!--<module>gora-cassandra</module>-->
         <!--<module>gora-solr</module>-->
@@ -614,7 +616,7 @@
         <!-- Dependencies -->
         <osgi.version>4.2.0</osgi.version>
         <!-- Avro Dependencies -->
-        <jackson.version>1.6.9</jackson.version>
+        <jackson.version>1.7.4</jackson.version>
         <!-- Hadoop Dependencies -->
         <hadoop.version>1.0.1</hadoop.version>
         <hadoop.test.version>1.0.1</hadoop.test.version>
@@ -636,6 +638,15 @@
         <httpcomponents.version>4.2.3</httpcomponents.version>
         <commons-io.version>2.1</commons-io.version>
         <restlet.version>2.1.1</restlet.version>
+
+        <!-- Pig Dependencies -->
+        <pig.version>0.12.1</pig.version>
+        <automaton.version>1.11-8</automaton.version>
+        <antlr.version>3.4</antlr.version>
+
+        <!-- Cascading Dependencies -->
+        <cascading.version>2.5.1</cascading.version>
+        <elephant-bird.version>4.4</elephant-bird.version>
 
         <!-- Misc Dependencies -->
         <guava.version>13.0</guava.version>
@@ -1326,6 +1337,64 @@
                       <artifactId>jms</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+
+            <!-- Pig -->
+            <dependency>
+                <groupId>org.apache.pig</groupId>
+                <artifactId>pig</artifactId>
+                <version>${pig.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.avro</groupId>
+                        <artifactId>avro</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>dk.brics.automaton</groupId>
+                <artifactId>automaton</artifactId>
+                <version>${automaton.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr-runtime</artifactId>
+                <version>${antlr.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <!-- Cascading -->
+            <dependency>
+                <groupId>cascading</groupId>
+                <artifactId>cascading-core</artifactId>
+                <version>${cascading.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>cascading</groupId>
+                <artifactId>cascading-local</artifactId>
+                <version>${cascading.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>cascading</groupId>
+                <artifactId>cascading-hadoop</artifactId>
+                <version>${cascading.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.twitter.elephantbird</groupId>
+                <artifactId>elephant-bird-core</artifactId>
+                <version>${elephant-bird.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.twitter.elephantbird</groupId>
+                <artifactId>elephant-bird-hadoop-compat</artifactId>
+                <version>${elephant-bird.version}</version>
             </dependency>
 
             <!-- Testing Dependencies -->
