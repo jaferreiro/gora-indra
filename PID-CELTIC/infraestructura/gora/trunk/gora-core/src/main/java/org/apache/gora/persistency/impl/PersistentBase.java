@@ -63,8 +63,8 @@ public abstract class PersistentBase extends SpecificRecordBase implements
 
   }
   
-  public abstract Map<String,Integer> getFields2IndexMapping() ;
-  public abstract Map<Integer,String> getIndex2FiedsMapping() ;
+  public abstract Map<String,Integer> getField2IndexMapping() ;
+  public abstract Map<Integer,String> getIndex2FieldMapping() ;
   
   @Override
   public void clearDirty() {
