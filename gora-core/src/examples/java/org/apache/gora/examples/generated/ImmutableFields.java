@@ -4,11 +4,31 @@
  * DO NOT EDIT DIRECTLY
  */
 package org.apache.gora.examples.generated;  
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 @SuppressWarnings("all")
 /** Record with only immutable or dirtyable fields, used for testing */
 public class ImmutableFields extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"ImmutableFields\",\"namespace\":\"org.apache.gora.examples.generated\",\"doc\":\"Record with only immutable or dirtyable fields, used for testing\",\"fields\":[{\"name\":\"v1\",\"type\":\"int\",\"default\":0},{\"name\":\"v2\",\"type\":[{\"type\":\"record\",\"name\":\"V2\",\"fields\":[{\"name\":\"v3\",\"type\":\"int\",\"default\":0}]},\"null\"],\"default\":null}]}");
 
+  private static final Map<String, Integer> FIELD2INDEX_MAP ;
+  private static final Map<Integer, String> INDEX2FIELD_MAP ;
+  
+  static {
+    Map<String,Integer> field2Index = new HashMap<String,Integer>(2) ;
+            field2Index.put("v1", 0) ;
+            field2Index.put("v2", 1) ;
+            FIELD2INDEX_MAP = Collections.unmodifiableMap(field2Index) ;
+    
+    Map<Integer, String> index2Field = new HashMap<Integer,String>(2) ;
+            index2Field.put(0, "v1") ;
+            index2Field.put(1, "v2") ;
+            INDEX2FIELD_MAP = Collections.unmodifiableMap(index2Field) ;
+  }
+  
   /** Enum containing all data bean's fields. */
   public static enum Field {
     V1(0, "v1"),
@@ -54,6 +74,16 @@ public class ImmutableFields extends org.apache.gora.persistency.impl.Persistent
   "v1",
   "v2",
   };
+
+  @Override
+  public Map<String, Integer> getField2IndexMapping() {
+    return FIELD2INDEX_MAP ;
+  }
+
+  @Override
+  public Map<Integer, String> getIndex2FieldMapping() {
+    return INDEX2FIELD_MAP ;
+  }
 
   /**
    * Gets the total field count.
@@ -148,7 +178,7 @@ public class ImmutableFields extends org.apache.gora.persistency.impl.Persistent
     return new org.apache.gora.examples.generated.ImmutableFields.Builder(other);
   }
   
-  private static java.nio.ByteBuffer deepCopyToReadOnlyBuffer(
+  private static java.nio.ByteBuffer deepCopyToWriteOnlyBuffer(
       java.nio.ByteBuffer input) {
     java.nio.ByteBuffer copy = java.nio.ByteBuffer.allocate(input.capacity());
     int position = input.position();
@@ -329,4 +359,3 @@ public class ImmutableFields extends org.apache.gora.persistency.impl.Persistent
   }
   
 }
-

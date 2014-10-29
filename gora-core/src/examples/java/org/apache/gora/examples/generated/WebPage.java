@@ -4,10 +4,38 @@
  * DO NOT EDIT DIRECTLY
  */
 package org.apache.gora.examples.generated;  
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 @SuppressWarnings("all")
 public class WebPage extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"WebPage\",\"namespace\":\"org.apache.gora.examples.generated\",\"fields\":[{\"name\":\"url\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"content\",\"type\":[\"null\",\"bytes\"],\"default\":null},{\"name\":\"parsedContent\",\"type\":{\"type\":\"array\",\"items\":\"string\"},\"default\":null},{\"name\":\"outlinks\",\"type\":{\"type\":\"map\",\"values\":\"string\"},\"default\":{}},{\"name\":\"headers\",\"type\":[\"null\",{\"type\":\"map\",\"values\":[\"null\",\"string\"]}],\"default\":null},{\"name\":\"metadata\",\"type\":{\"type\":\"record\",\"name\":\"Metadata\",\"fields\":[{\"name\":\"version\",\"type\":\"int\",\"default\":0},{\"name\":\"data\",\"type\":{\"type\":\"map\",\"values\":\"string\"},\"default\":null}]},\"default\":null}],\"default\":null}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"WebPage\",\"namespace\":\"org.apache.gora.examples.generated\",\"fields\":[{\"name\":\"url\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"content\",\"type\":[\"null\",\"bytes\"],\"default\":null},{\"name\":\"parsedContent\",\"type\":{\"type\":\"array\",\"items\":\"string\"},\"default\":{}},{\"name\":\"outlinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"headers\",\"type\":[\"null\",{\"type\":\"map\",\"values\":[\"null\",\"string\"]}],\"default\":null},{\"name\":\"metadata\",\"type\":{\"type\":\"record\",\"name\":\"Metadata\",\"fields\":[{\"name\":\"version\",\"type\":\"int\",\"default\":0},{\"name\":\"data\",\"type\":{\"type\":\"map\",\"values\":\"string\"},\"default\":{}}]},\"default\":null}]}");
 
+  private static final Map<String, Integer> FIELD2INDEX_MAP ;
+  private static final Map<Integer, String> INDEX2FIELD_MAP ;
+  
+  static {
+    Map<String,Integer> field2Index = new HashMap<String,Integer>(6) ;
+            field2Index.put("url", 0) ;
+            field2Index.put("content", 1) ;
+            field2Index.put("parsedContent", 2) ;
+            field2Index.put("outlinks", 3) ;
+            field2Index.put("headers", 4) ;
+            field2Index.put("metadata", 5) ;
+            FIELD2INDEX_MAP = Collections.unmodifiableMap(field2Index) ;
+    
+    Map<Integer, String> index2Field = new HashMap<Integer,String>(6) ;
+            index2Field.put(0, "url") ;
+            index2Field.put(1, "content") ;
+            index2Field.put(2, "parsedContent") ;
+            index2Field.put(3, "outlinks") ;
+            index2Field.put(4, "headers") ;
+            index2Field.put(5, "metadata") ;
+            INDEX2FIELD_MAP = Collections.unmodifiableMap(index2Field) ;
+  }
+  
   /** Enum containing all data bean's fields. */
   public static enum Field {
     URL(0, "url"),
@@ -61,6 +89,16 @@ public class WebPage extends org.apache.gora.persistency.impl.PersistentBase imp
   "headers",
   "metadata",
   };
+
+  @Override
+  public Map<String, Integer> getField2IndexMapping() {
+    return FIELD2INDEX_MAP ;
+  }
+
+  @Override
+  public Map<Integer, String> getIndex2FieldMapping() {
+    return INDEX2FIELD_MAP ;
+  }
 
   /**
    * Gets the total field count.
@@ -263,7 +301,7 @@ public class WebPage extends org.apache.gora.persistency.impl.PersistentBase imp
     return new org.apache.gora.examples.generated.WebPage.Builder(other);
   }
   
-  private static java.nio.ByteBuffer deepCopyToReadOnlyBuffer(
+  private static java.nio.ByteBuffer deepCopyToWriteOnlyBuffer(
       java.nio.ByteBuffer input) {
     java.nio.ByteBuffer copy = java.nio.ByteBuffer.allocate(input.capacity());
     int position = input.position();
@@ -661,4 +699,3 @@ public class WebPage extends org.apache.gora.persistency.impl.PersistentBase imp
   }
   
 }
-

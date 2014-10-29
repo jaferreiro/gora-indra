@@ -4,10 +4,38 @@
  * DO NOT EDIT DIRECTLY
  */
 package org.apache.gora.examples.generated;  
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 @SuppressWarnings("all")
 public class Employee extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Employee\",\"namespace\":\"org.apache.gora.examples.generated\",\"fields\":[{\"name\":\"name\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"dateOfBirth\",\"type\":\"long\",\"default\":0},{\"name\":\"ssn\",\"type\":\"string\",\"default\":\"\"},{\"name\":\"salary\",\"type\":\"int\",\"default\":0},{\"name\":\"boss\",\"type\":[\"null\",\"Employee\",\"string\"],\"default\":null},{\"name\":\"webpage\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"WebPage\",\"fields\":[{\"name\":\"url\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"content\",\"type\":[\"null\",\"bytes\"],\"default\":null},{\"name\":\"parsedContent\",\"type\":{\"type\":\"array\",\"items\":\"string\"},\"default\":{}},{\"name\":\"outlinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"headers\",\"type\":[\"null\",{\"type\":\"map\",\"values\":[\"null\",\"string\"]}],\"default\":null},{\"name\":\"metadata\",\"type\":{\"type\":\"record\",\"name\":\"Metadata\",\"fields\":[{\"name\":\"version\",\"type\":\"int\",\"default\":0},{\"name\":\"data\",\"type\":{\"type\":\"map\",\"values\":\"string\"},\"default\":{}}]},\"default\":null}]}],\"default\":null}],\"default\":null}");
 
+  private static final Map<String, Integer> FIELD2INDEX_MAP ;
+  private static final Map<Integer, String> INDEX2FIELD_MAP ;
+  
+  static {
+    Map<String,Integer> field2Index = new HashMap<String,Integer>(6) ;
+            field2Index.put("name", 0) ;
+            field2Index.put("dateOfBirth", 1) ;
+            field2Index.put("ssn", 2) ;
+            field2Index.put("salary", 3) ;
+            field2Index.put("boss", 4) ;
+            field2Index.put("webpage", 5) ;
+            FIELD2INDEX_MAP = Collections.unmodifiableMap(field2Index) ;
+    
+    Map<Integer, String> index2Field = new HashMap<Integer,String>(6) ;
+            index2Field.put(0, "name") ;
+            index2Field.put(1, "dateOfBirth") ;
+            index2Field.put(2, "ssn") ;
+            index2Field.put(3, "salary") ;
+            index2Field.put(4, "boss") ;
+            index2Field.put(5, "webpage") ;
+            INDEX2FIELD_MAP = Collections.unmodifiableMap(index2Field) ;
+  }
+  
   /** Enum containing all data bean's fields. */
   public static enum Field {
     NAME(0, "name"),
@@ -61,6 +89,16 @@ public class Employee extends org.apache.gora.persistency.impl.PersistentBase im
   "boss",
   "webpage",
   };
+
+  @Override
+  public Map<String, Integer> getField2IndexMapping() {
+    return FIELD2INDEX_MAP ;
+  }
+
+  @Override
+  public Map<Integer, String> getIndex2FieldMapping() {
+    return INDEX2FIELD_MAP ;
+  }
 
   /**
    * Gets the total field count.
@@ -263,7 +301,7 @@ public class Employee extends org.apache.gora.persistency.impl.PersistentBase im
     return new org.apache.gora.examples.generated.Employee.Builder(other);
   }
   
-  private static java.nio.ByteBuffer deepCopyToReadOnlyBuffer(
+  private static java.nio.ByteBuffer deepCopyToWriteOnlyBuffer(
       java.nio.ByteBuffer input) {
     java.nio.ByteBuffer copy = java.nio.ByteBuffer.allocate(input.capacity());
     int position = input.position();
@@ -659,4 +697,3 @@ public class Employee extends org.apache.gora.persistency.impl.PersistentBase im
   }
   
 }
-

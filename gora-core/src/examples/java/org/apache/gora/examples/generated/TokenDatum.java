@@ -4,10 +4,28 @@
  * DO NOT EDIT DIRECTLY
  */
 package org.apache.gora.examples.generated;  
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 @SuppressWarnings("all")
 public class TokenDatum extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"TokenDatum\",\"namespace\":\"org.apache.gora.examples.generated\",\"fields\":[{\"name\":\"count\",\"type\":\"int\",\"default\":0}]}");
 
+  private static final Map<String, Integer> FIELD2INDEX_MAP ;
+  private static final Map<Integer, String> INDEX2FIELD_MAP ;
+  
+  static {
+    Map<String,Integer> field2Index = new HashMap<String,Integer>(1) ;
+            field2Index.put("count", 0) ;
+            FIELD2INDEX_MAP = Collections.unmodifiableMap(field2Index) ;
+    
+    Map<Integer, String> index2Field = new HashMap<Integer,String>(1) ;
+            index2Field.put(0, "count") ;
+            INDEX2FIELD_MAP = Collections.unmodifiableMap(index2Field) ;
+  }
+  
   /** Enum containing all data bean's fields. */
   public static enum Field {
     COUNT(0, "count"),
@@ -51,6 +69,16 @@ public class TokenDatum extends org.apache.gora.persistency.impl.PersistentBase 
   public static final String[] _ALL_FIELDS = {
   "count",
   };
+
+  @Override
+  public Map<String, Integer> getField2IndexMapping() {
+    return FIELD2INDEX_MAP ;
+  }
+
+  @Override
+  public Map<Integer, String> getIndex2FieldMapping() {
+    return INDEX2FIELD_MAP ;
+  }
 
   /**
    * Gets the total field count.
@@ -118,7 +146,7 @@ public class TokenDatum extends org.apache.gora.persistency.impl.PersistentBase 
     return new org.apache.gora.examples.generated.TokenDatum.Builder(other);
   }
   
-  private static java.nio.ByteBuffer deepCopyToReadOnlyBuffer(
+  private static java.nio.ByteBuffer deepCopyToWriteOnlyBuffer(
       java.nio.ByteBuffer input) {
     java.nio.ByteBuffer copy = java.nio.ByteBuffer.allocate(input.capacity());
     int position = input.position();
@@ -245,4 +273,3 @@ public class TokenDatum extends org.apache.gora.persistency.impl.PersistentBase 
   }
   
 }
-
