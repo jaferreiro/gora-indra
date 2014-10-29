@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -57,10 +56,8 @@ public class GoraCompiler extends SpecificCompiler {
 
     for (File src : srcFiles) {
       System.out.println("Compiling: " + src.getAbsolutePath());
-      Schema originalSchema = parser.parse(src);
-      Map<Schema,Schema> queue = new HashMap<Schema,Schema>();
-      Schema newSchema = getSchemaWithDirtySupport(originalSchema, queue);
-      GoraCompiler compiler = new GoraCompiler(newSchema);
+      Schema schema = parser.parse(src);
+      GoraCompiler compiler = new GoraCompiler(schema);
       compiler.setTemplateDir("/org/apache/gora/compiler/templates/");
       compiler.compileToDestination(src, dest);
       System.out.println("Compiled into: " + dest.getAbsolutePath());
