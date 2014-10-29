@@ -18,6 +18,11 @@
 #if ($schema.getNamespace())
 package $schema.getNamespace();  
 #end
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 @SuppressWarnings("all")
 #if ($schema.getDoc())
 /** $schema.getDoc() */
@@ -25,6 +30,27 @@ package $schema.getNamespace();
 public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends org.apache.avro.specific.SpecificExceptionBase#else extends org.apache.gora.persistency.impl.PersistentBase#end implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("${this.javaEscape($schema.toString())}");
 
+  private static final Map<String, Integer> FIELD2INDEX_MAP ;
+  private static final Map<Integer, String> INDEX2FIELD_MAP ;
+  
+  static {
+    Map<String,Integer> field2Index = new HashMap<String,Integer>(${schema.getFields().size()}) ;
+    #set ($i = 0)
+    #foreach ($field in $schema.getFields())
+    field2Index.put($field.name(), $i) ;
+    #set ($i = $i + 1)
+    #end
+    FIELD2INDEX_MAP = Collections.unmodifiableMap(field2Index) ;
+    
+    Map<Integer, String> index2Field = new HashMap<Integer,String>(${schema.getFields().size()}) ;
+    #set ($i = 0)
+    #foreach ($field in $schema.getFields())
+    index2Field.put($i, $field.name()) ;
+    #set ($i = $i + 1)
+    #end
+    INDEX2FIELD_MAP = Collections.unmodifiableMap(index2Field) ;
+  }
+  
   /** Enum containing all data bean's fields. */
   public static enum Field {
 #set ($i = 0)
@@ -74,6 +100,24 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   "${this.mangle($field.name(), $schema.isError())}",
 #end
   };
+
+  @Override
+  public Map<String, Integer> getField2IndexMapping() {
+    return FIELD2INDEX_MAP ;
+  }
+
+  @Override
+  public Map<Integer, String> getIndex2FieldMapping() {
+    return INDEX2FIELD_MAP ;
+  }
+
+  /**
+   * Gets the total field count.
+   * @return int field count
+   */
+  public int getFieldsCount() {
+    return ${this.mangle($schema.getName())}._ALL_FIELDS.length;
+  }
 
 #foreach ($field in $schema.getFields())
 #if ($field.doc())
