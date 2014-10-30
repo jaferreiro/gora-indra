@@ -760,11 +760,8 @@ implements Configurable {
 
       List<Element> classElements = root.getChildren("class");
       for(Element classElement: classElements) {
-        if(classElement.getAttributeValue("keyClass").equals(
-            keyClass.getCanonicalName())
-            && classElement.getAttributeValue("name").equals(
-                persistentClass.getCanonicalName())) {
-          LOG.debug("Keyclass and nameclass match.");
+        if(classElement.getAttributeValue("keyClass").equals(keyClass.getCanonicalName())
+            && classElement.getAttributeValue("name").equals(persistentClass.getCanonicalName())) {
 
           String tableNameFromMapping = classElement.getAttributeValue("table");
           String tableName = getSchemaName(tableNameFromMapping, persistentClass);
@@ -792,8 +789,6 @@ implements Configurable {
           //we found a matching key and value class definition,
           //do not continue on other class definitions
           break;
-        } else {
-          LOG.error("KeyClass in gora-hbase-mapping is not the same as the one in the databean.");
         }
       }
     } catch(IOException ex) {
