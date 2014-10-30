@@ -25,7 +25,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
-import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
@@ -33,9 +32,7 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.util.Utf8;
-
 import org.apache.gora.util.AvroUtils;
-
 import org.apache.hadoop.hbase.util.Bytes;
 
 /**
@@ -82,7 +79,7 @@ public class HBaseByteInterface {
     Type type = schema.getType();
     switch (type) {
     case ENUM:    return AvroUtils.getEnumValue(schema, val[0]);
-    case STRING:  return new Utf8(Bytes.toString(val));
+    case STRING:  return Bytes.toString(val);
     case BYTES:   return ByteBuffer.wrap(val);
     case INT:     return Bytes.toInt(val);
     case LONG:    return Bytes.toLong(val);
