@@ -46,7 +46,6 @@ import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecord;
-import org.apache.avro.util.Utf8;
 import org.apache.hadoop.io.WritableUtils;
 
 //  This code is copied almost directly from HBase project's Bytes class.
@@ -686,7 +685,7 @@ public class ByteUtils {
     case ENUM:
       String symbol = schema.getEnumSymbols().get(val[0]);
       return (T)Enum.valueOf(ReflectData.get().getClass(schema), symbol);
-    case STRING:  return (T)new Utf8(toString(val));
+    case STRING:  return (T)toString(val);
     case BYTES:   return (T)ByteBuffer.wrap(val);
     case INT:     return (T)Integer.valueOf(bytesToVint(val));
     case LONG:    return (T)Long.valueOf(bytesToVlong(val));
@@ -706,7 +705,7 @@ public class ByteUtils {
   throws IOException {
     Type type = schema.getType();
     switch (type) {
-    case STRING:  return toBytes(((Utf8)o).toString()); // TODO: maybe ((Utf8)o).getBytes(); ?
+    case STRING:  return toBytes(o.toString()); // TODO: maybe o.getBytes(); ?
     case BYTES:   return ((ByteBuffer)o).array();
     case INT:     return vintToBytes((Integer)o);
     case LONG:    return vintToBytes((Long)o);
