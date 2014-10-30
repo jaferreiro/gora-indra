@@ -131,6 +131,9 @@ public class WebPage extends org.apache.gora.persistency.impl.PersistentBase imp
   // Used by DatumReader.  Applications should not call. 
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value) {
+    if (field$ >= 0 && field$ < 6) {
+      setDirty(field$) ;
+    }
     switch (field$) {
     case 0: url = (java.lang.CharSequence)(value); break;
     case 1: content = (java.nio.ByteBuffer)(value); break;

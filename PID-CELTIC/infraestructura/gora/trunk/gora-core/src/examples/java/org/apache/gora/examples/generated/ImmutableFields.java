@@ -108,6 +108,9 @@ public class ImmutableFields extends org.apache.gora.persistency.impl.Persistent
   // Used by DatumReader.  Applications should not call. 
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value) {
+    if (field$ >= 0 && field$ < 2) {
+      setDirty(field$) ;
+    }
     switch (field$) {
     case 0: v1 = (java.lang.Integer)(value); break;
     case 1: v2 = (org.apache.gora.examples.generated.V2)(value); break;

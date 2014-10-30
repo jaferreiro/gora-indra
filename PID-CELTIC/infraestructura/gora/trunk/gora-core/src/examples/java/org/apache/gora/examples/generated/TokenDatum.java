@@ -101,6 +101,9 @@ public class TokenDatum extends org.apache.gora.persistency.impl.PersistentBase 
   // Used by DatumReader.  Applications should not call. 
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value) {
+    if (field$ >= 0 && field$ < 1) {
+      setDirty(field$) ;
+    }
     switch (field$) {
     case 0: count = (java.lang.Integer)(value); break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");

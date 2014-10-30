@@ -131,6 +131,9 @@ public class Employee extends org.apache.gora.persistency.impl.PersistentBase im
   // Used by DatumReader.  Applications should not call. 
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value) {
+    if (field$ >= 0 && field$ < 6) {
+      setDirty(field$) ;
+    }
     switch (field$) {
     case 0: name = (java.lang.CharSequence)(value); break;
     case 1: dateOfBirth = (java.lang.Long)(value); break;
