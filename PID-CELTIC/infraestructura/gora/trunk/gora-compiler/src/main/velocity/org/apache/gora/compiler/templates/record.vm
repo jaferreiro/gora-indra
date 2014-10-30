@@ -160,6 +160,9 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   // Used by DatumReader.  Applications should not call. 
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value) {
+    if (field$ >= 0 && field$ < ${schema.getFields().size()}) {
+      setDirty(field$) ;
+    }
     switch (field$) {
 #set ($i = 0)
 #foreach ($field in $schema.getFields())
