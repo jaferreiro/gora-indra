@@ -107,6 +107,9 @@ public class Metadata extends org.apache.gora.persistency.impl.PersistentBase im
   // Used by DatumReader.  Applications should not call. 
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value) {
+    if (field$ >= 0 && field$ < 2) {
+      setDirty(field$) ;
+    }
     switch (field$) {
     case 0: version = (java.lang.Integer)(value); break;
     case 1: data = (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)value)); break;
