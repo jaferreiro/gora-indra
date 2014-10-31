@@ -643,6 +643,7 @@
         <pig.version>0.12.1</pig.version>
         <automaton.version>1.11-8</automaton.version>
         <antlr.version>3.4</antlr.version>
+        <datafu.version>1.2.0</datafu.version>
 
         <!-- Cascading Dependencies -->
         <cascading.version>2.5.1</cascading.version>
@@ -1364,6 +1365,12 @@
                 <artifactId>antlr-runtime</artifactId>
                 <version>${antlr.version}</version>
                 <scope>test</scope>
+            </dependency>
+            
+            <dependency>
+                <groupId>com.linkedin.datafu</groupId>
+                <artifactId>datafu</artifactId>
+                <version>${datafu.version}</version>
             </dependency>
 
             <!-- Cascading -->
