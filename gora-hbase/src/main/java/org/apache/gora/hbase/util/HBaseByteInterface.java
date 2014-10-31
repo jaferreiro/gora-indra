@@ -79,7 +79,7 @@ public class HBaseByteInterface {
     Type type = schema.getType();
     switch (type) {
     case ENUM:    return AvroUtils.getEnumValue(schema, val[0]);
-    case STRING:  return Bytes.toString(val);
+    case STRING:  return new Utf8(Bytes.toString(val));
     case BYTES:   return ByteBuffer.wrap(val);
     case INT:     return Bytes.toInt(val);
     case LONG:    return Bytes.toLong(val);
