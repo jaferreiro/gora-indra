@@ -35,6 +35,7 @@ import java.util.Set;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
+import org.apache.avro.util.Utf8;
 import org.apache.gora.hbase.query.HBaseGetResult;
 import org.apache.gora.hbase.query.HBaseQuery;
 import org.apache.gora.hbase.query.HBaseScannerResult;
@@ -658,9 +659,9 @@ implements Configurable {
         return;
       }
       Schema valueSchema = fieldSchema.getValueType();
-      Map<CharSequence, Object> map = new HashMap<CharSequence, Object>();
+      Map<Utf8, Object> map = new HashMap<Utf8, Object>();
       for (Entry<byte[], byte[]> e : qualMap.entrySet()) {
-        map.put(Bytes.toString(e.getKey()),
+        map.put(new Utf8(Bytes.toString(e.getKey())),
             fromBytes(valueSchema, e.getValue()));
       }
       setField(persistent, field, map);
