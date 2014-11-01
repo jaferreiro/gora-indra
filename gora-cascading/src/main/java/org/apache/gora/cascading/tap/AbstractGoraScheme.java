@@ -337,7 +337,7 @@ public abstract class AbstractGoraScheme<CONFIG, INPUT, OUTPUT, SOURCECONTEXT, S
     protected void setTupleFieldFromPersistent(PersistentBase persistent, TupleEntry tupleEntry, String tupleFieldName) {
         int persistentFieldIndex ;
         try {
-            persistentFieldIndex = persistent.getFieldIndex(tupleFieldName) ; // NPE if field name noes not exist in Persistent instance
+            persistentFieldIndex = persistent.getField2IndexMapping().get(tupleFieldName) ; // NPE if field name noes not exist in Persistent instance
         } catch(NullPointerException e) {
             LOG.warn("Field <{}> not found in source class {}", tupleFieldName, persistent.getClass().toString()) ;
             return ;

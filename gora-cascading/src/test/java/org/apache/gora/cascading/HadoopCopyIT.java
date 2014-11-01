@@ -53,7 +53,6 @@ public class HadoopCopyIT {
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
-        System.setProperty(HBaseTestingUtility.TEST_DIRECTORY_KEY, "build/test-data");
         Configuration localExecutionConfiguration = new Configuration() ;
         localExecutionConfiguration.setStrings("hadoop.log.dir", localExecutionConfiguration.get("hadoop.tmp.dir")) ;
         utility = new HBaseTestingUtility(localExecutionConfiguration);

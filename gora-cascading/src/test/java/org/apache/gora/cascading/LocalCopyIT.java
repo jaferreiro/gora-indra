@@ -51,7 +51,6 @@ public class LocalCopyIT {
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
-        System.setProperty(HBaseTestingUtility.TEST_DIRECTORY_KEY, "build/test-data");
         Configuration localExecutionConfiguration = new Configuration() ;
         utility = new HBaseTestingUtility(localExecutionConfiguration);
         utility.startMiniCluster(1);
