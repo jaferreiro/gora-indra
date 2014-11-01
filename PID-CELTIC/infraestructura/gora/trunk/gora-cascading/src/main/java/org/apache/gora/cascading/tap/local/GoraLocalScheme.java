@@ -105,7 +105,7 @@ public class GoraLocalScheme extends AbstractGoraScheme<Properties,  // Config
     
     @Override
     protected String[] getPersistentFields(FlowProcess<Properties> flowProcess, Tap tap) throws GoraException {
-        return ((PersistentBase) ((GoraLocalTap)tap).getDataStore(flowProcess.getConfigCopy()).newPersistent()).getFields() ;
+        return ((PersistentBase) ((GoraLocalTap)tap).getDataStore(flowProcess.getConfigCopy()).newPersistent()).getField2IndexMapping().keySet().toArray(new String[]{}) ;
     }
     
     @Override
@@ -186,7 +186,7 @@ public class GoraLocalScheme extends AbstractGoraScheme<Properties,  // Config
             // Copy each field of the tuple to the Persistent instance
             for (String fieldName : this.getSinkGoraFields()) {
                 try {
-                    int indexInPersistent = newOutputPersistent.getFieldIndex(fieldName) ;
+                    int indexInPersistent = newOutputPersistent.getField2IndexMapping().get(fieldName) ;
                     Object value = tupleEntry.getObject(fieldName) ;
                     
                     // convert String -> Utf8

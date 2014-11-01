@@ -114,7 +114,7 @@ public class GoraScheme extends AbstractGoraScheme<JobConf, // Config
 
     @Override
     protected String[] getPersistentFields(FlowProcess<JobConf> flowProcess, Tap tap) throws GoraException {
-        return ((PersistentBase) ((GoraTap)tap).getDataStore(flowProcess.getConfigCopy()).newPersistent()).getFields() ;
+        return ((PersistentBase) ((GoraTap)tap).getDataStore(flowProcess.getConfigCopy()).newPersistent()).getField2IndexMapping().keySet().toArray(new String[]{}) ;
     }
     
     @SuppressWarnings("unchecked")
@@ -232,7 +232,7 @@ public class GoraScheme extends AbstractGoraScheme<JobConf, // Config
             // Copy each field of the tuple to the Persistent instance
             for (String fieldName : this.getSinkGoraFields()) {
                 try {
-                    int indexInPersistent = newOutputPersistent.getFieldIndex(fieldName) ;
+                    int indexInPersistent = newOutputPersistent.getField2IndexMapping().get(fieldName) ;
                     Object value = tupleEntry.getObject(fieldName) ;
                     
                     // convert String -> Utf8
