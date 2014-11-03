@@ -3,14 +3,14 @@
  "namespace": "org.apache.gora.cascading.test.storage",
  "fields": [
         {"name": "defaultLong1",       "type": "long", "default": 1},
-        {"name": "defaultStringEmpty", "type": "string"},
-        {"name": "columnLong",         "type": ["null","long"]},
-        {"name": "unionRecursive",     "type": ["null","TestRowDest"]},
-        {"name": "unionString",        "type": ["null","string"]},
-        {"name": "unionLong",          "type": ["null","long"]},
-        {"name": "unionDefNull",       "type": ["null","long"]},
+        {"name": "defaultStringEmpty", "type": "string", "default": ""},
+        {"name": "columnLong",         "type": ["null","long"], "default": null},
+        {"name": "unionRecursive",     "type": ["null","TestRowDest"], "default": null},
+        {"name": "unionString",        "type": ["null","string"], "default": null},
+        {"name": "unionLong",          "type": ["null","long"], "default": null},
+        {"name": "unionDefNull",       "type": ["null","long"], "default": null},
         
-        {"name": "family2",            "type": {"type": "map", "values":"string"}}
+        {"name": "family2",            "type": {"type": "map", "values":"string"}, "default": {} }
 
    ]
 }
