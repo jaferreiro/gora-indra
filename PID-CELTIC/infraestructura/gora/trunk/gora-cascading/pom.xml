@@ -49,7 +49,7 @@
         <testOutputDirectory>target/test-classes</testOutputDirectory>
         <testSourceDirectory>src/test/java</testSourceDirectory>
         <sourceDirectory>src/main/java</sourceDirectory>
-        
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -70,7 +70,7 @@
                 <executions>
                     <execution>
                         <id>assembly</id>
-                        <phase/>
+                        <phase />
                     </execution>
                     <!-- Crear el jar junto con las dependencias -->
                     <execution>
@@ -80,6 +80,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
+                            <attach>false</attach>
                             <descriptors>
                                 <descriptor>src/main/assembly/jar-with-dependencies.xml</descriptor>
                             </descriptors>
@@ -92,6 +93,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
+                            <attach>false</attach>
                             <descriptors>
                                 <descriptor>src/main/assembly/onlydependencies.xml</descriptor>
                             </descriptors>
@@ -104,6 +106,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
+                            <attach>false</attach>
                             <descriptors>
                                 <descriptor>src/main/assembly/test-jar-with-dependencies.xml</descriptor>
                             </descriptors>
@@ -111,9 +114,9 @@
                     </execution>
                 </executions>
                 <configuration>
-                   <descriptors>
-                   <descriptor></descriptor>
-                   </descriptors>
+                    <descriptors>
+                        <descriptor></descriptor>
+                    </descriptors>
                 </configuration>
             </plugin>
         </plugins>
