@@ -111,17 +111,17 @@ public class HadoopCopyIT {
     @Before
     public void before() throws GoraException {
         DataStore<String, TestRow> dataStore = DataStoreFactory.getDataStore(String.class, TestRow.class, HadoopCopyIT.configuration);
-        TestRow t = dataStore.newPersistent();
-        t.setDefaultLong1(2); // Campo obligatorio
+        TestRow t = dataStore.newPersistent();        
+        t.setDefaultLong1((long)2); // Campo obligatorio
         t.setDefaultStringEmpty("a"); //Campo obligatorio
         t.setColumnLong((long) 10);
-        t.setDefaultLong1(2);
+        t.setDefaultLong1((long)2);
         dataStore.put("1", t);
 
-        t.setDefaultLong1(3); // Campo obligatorio
+        t.setDefaultLong1((long)3); // Campo obligatorio
         t.setDefaultStringEmpty("b"); //Campo obligatorio
         t.setColumnLong((long) 5);
-        t.setDefaultLong1(7);
+        t.setDefaultLong1((long)7);
         dataStore.put("2", t);
 
         dataStore.flush();
@@ -131,7 +131,7 @@ public class HadoopCopyIT {
     public void identityCopy() throws Exception {
 
         Properties properties = ConfigurationUtil.toProperties(HadoopCopyIT.configuration) ;
-        AppProps.setApplicationJarPath(properties, "target/gora-cascading-0.4-indra-SNAPSHOT-test-jar-with-dependencies.jar") ;
+        AppProps.setApplicationJarPath(properties, "target/apache-gora-cascading-0.4.1-test-jar-with-dependencies.jar") ;
         HadoopCopyIT.configuration = ConfigurationUtil.toConfiguration(properties) ;
         
         GoraScheme esquema = new GoraScheme() ;
@@ -161,7 +161,7 @@ public class HadoopCopyIT {
             LOG.debug("key = {}",resultDest.getKey().toString()) ;
             if (resultDest.getKey().equals("1")) {
                 TestRow persistent = resultDest.get() ;
-                assertEquals(2, persistent.getDefaultLong1()) ;
+                assertEquals(new Long(2), persistent.getDefaultLong1()) ;
                 assertEquals("a", persistent.getDefaultStringEmpty().toString()) ;
                 assertEquals(10, persistent.getColumnLong().longValue()) ;
             }
@@ -175,7 +175,7 @@ public class HadoopCopyIT {
     public void incrementField() throws Exception {
 
         Properties properties = ConfigurationUtil.toProperties(HadoopCopyIT.configuration) ;
-        AppProps.setApplicationJarPath(properties, "target/gora-cascading-0.4-indra-SNAPSHOT-test-jar-with-dependencies.jar") ;
+        AppProps.setApplicationJarPath(properties, "target/apache-gora-cascading-0.4.1-test-jar-with-dependencies.jar") ;
         HadoopCopyIT.configuration = ConfigurationUtil.toConfiguration(properties) ;
         
         GoraScheme esquema = new GoraScheme() ;
@@ -202,7 +202,7 @@ public class HadoopCopyIT {
             LOG.debug("key = {}",resultDest.getKey().toString()) ;
             if (resultDest.getKey().equals("1")) {
                 TestRow persistent = resultDest.get() ;
-                assertEquals(2, persistent.getDefaultLong1()) ;
+                assertEquals(new Long(2), persistent.getDefaultLong1()) ;
                 assertEquals("a", persistent.getDefaultStringEmpty().toString()) ;
                 assertEquals(10, persistent.getColumnLong().longValue()) ;
                 assertEquals(67, persistent.getUnionLong().longValue()) ;

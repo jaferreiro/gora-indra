@@ -68,6 +68,7 @@ public class LocalCopyIT {
             hbase.disableTable(Bytes.toBytes(tableName));
             hbase.deleteTable(Bytes.toBytes(tableName));
         }
+        hbase.close() ;
     }
 
     protected void verifySink(Flow<?> flow, int expects) throws Exception {
@@ -81,7 +82,7 @@ public class LocalCopyIT {
             LOG.debug("key = {}",resultDest.getKey().toString()) ;
             if (resultDest.getKey().equals("1")) {
                 TestRowDest persistent = resultDest.get() ;
-                assertEquals(2, persistent.getDefaultLong1()) ;
+                assertEquals(new Long(2), persistent.getDefaultLong1()) ;
                 assertEquals("a", persistent.getDefaultStringEmpty().toString()) ;
                 assertEquals(10, persistent.getColumnLong().longValue()) ;
             }
@@ -102,7 +103,7 @@ public class LocalCopyIT {
             LOG.debug("key = {}",resultDest.getKey().toString()) ;
             if (resultDest.getKey().equals("1")) {
                 TestRowDest persistent = resultDest.get() ;
-                assertEquals(2, persistent.getDefaultLong1()) ;
+                assertEquals(new Long(2), persistent.getDefaultLong1()) ;
                 assertEquals("a", persistent.getDefaultStringEmpty().toString()) ;
                 assertEquals(10, persistent.getColumnLong().longValue()) ;
                 assertEquals(67, persistent.getUnionLong().longValue()) ;
@@ -136,16 +137,16 @@ public class LocalCopyIT {
     public void before() throws GoraException {
         DataStore<String, TestRow> dataStore = DataStoreFactory.getDataStore(String.class, TestRow.class, LocalCopyIT.configuration);
         TestRow t = dataStore.newPersistent();
-        t.setDefaultLong1(2); // Campo obligatorio
+        t.setDefaultLong1((long)2); // Campo obligatorio
         t.setDefaultStringEmpty("a"); //Campo obligatorio
         t.setColumnLong((long) 10);
-        t.setDefaultLong1(2);
+        t.setDefaultLong1((long)2);
         dataStore.put("1", t);
 
-        t.setDefaultLong1(3); // Campo obligatorio
+        t.setDefaultLong1((long)3); // Campo obligatorio
         t.setDefaultStringEmpty("b"); //Campo obligatorio
         t.setColumnLong((long) 5);
-        t.setDefaultLong1(7);
+        t.setDefaultLong1((long)7);
         dataStore.put("2", t);
 
         dataStore.flush();
@@ -190,7 +191,7 @@ public class LocalCopyIT {
 
         Pipe insertPipe = new Each("insert", new Fields("defaultLong1"), new IncrementField(new Fields("unionLong")), Fields.REPLACE) ;
         FlowConnector flowConnector = new LocalFlowConnector(properties) ;
-        Flow copyFlow = flowConnector.connect(origen, destino, insertPipe);
+        Flow<?> copyFlow = flowConnector.connect(origen, destino, insertPipe);
 
         copyFlow.complete();
 
