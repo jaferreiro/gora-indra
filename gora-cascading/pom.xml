@@ -25,7 +25,7 @@
 
     <properties>
         <osgi.import>*</osgi.import>
-        <osgi.export>org.apache.gora.cascading*;version="${project.version}";-noimport:=true</osgi.export>
+        <osgi.export>org.apache.gora.cascading*,com.twitter.elephantbird.mapred.input.*;version="${project.version}";-noimport:=true</osgi.export>
     </properties>
 
     <repositories>
