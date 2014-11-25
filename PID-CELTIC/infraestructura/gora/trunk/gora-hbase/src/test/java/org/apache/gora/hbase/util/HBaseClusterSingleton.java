@@ -83,7 +83,6 @@ public final class HBaseClusterSingleton {
       LOG.warn("Couldn't get umask", e);
     }
 
-    htu.getConfiguration().setBoolean("dfs.support.append", true);
     htu.getConfiguration().setInt("zookeeper.session.timeout", 20000);
     //htu.getConfiguration().set("hbase.zookeeper.quorum", "localhost");
     //htu.getConfiguration().setInt("hbase.zookeeper.property.clientPort", 2181);
