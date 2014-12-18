@@ -222,17 +222,17 @@ public abstract class AbstractGoraScheme<CONFIG, INPUT, OUTPUT, SOURCECONTEXT, S
 
         Fields sourceFields = this.getSourceFields() ;
 
-System.out.println("Source fields : " + sourceFields.print()) ;
+        if (LOG.isTraceEnabled()) LOG.trace("Source fields : {} ", sourceFields.print()) ;
         
         // Source fields for Cascading
         Fields cascadingSourceFields = new Fields(this.getTupleKeyName()) ; // Cascading source fields start as ("key")
         if (this.isSourceAsPersistent()) { // (key, Persistent) 
-System.out.println("  Source as persistent") ;
+            if (LOG.isTraceEnabled()) LOG.trace("  Source as persistent") ;
             cascadingSourceFields = cascadingSourceFields.append(new Fields(this.getTuplePersistentFieldName())) ;
         } else {
-System.out.println("  Source as fields") ;
+            if (LOG.isTraceEnabled()) LOG.trace("  Source as fields") ;
             if (sourceFields.isAll() || sourceFields.isUnknown()) {
-System.out.println("  Source all("+sourceFields.isAll()+") or unknown("+sourceFields.isUnknown()+").") ;
+                if (LOG.isTraceEnabled()) LOG.trace("  Source all({}) or unknown({}).", sourceFields.isAll(), sourceFields.isUnknown()) ;
                 // (key, persistent_field, persistent_field,...)
                 cascadingSourceFields = cascadingSourceFields.append(new Fields(this.getSourceGoraFields())) ;
             } else {
@@ -241,29 +241,29 @@ System.out.println("  Source all("+sourceFields.isAll()+") or unknown("+sourceFi
             }
         }
         this.setSourceFields(cascadingSourceFields) ;
-System.out.println("  Source for cascading : " + cascadingSourceFields.print()) ;
+        if (LOG.isTraceEnabled()) LOG.trace("  Source for cascading : {}", cascadingSourceFields.print()) ;
         
         // Gora fields (default above)
         if ( !sourceFields.isAll() && !sourceFields.isUnknown()) {
             // Gora fields = sourceFields(constructor) INTERSECTION gora fields
             // (intersection from Persistent and declared in constructor)
             String[] newGoraFields = (String[]) ArrayUtils.clone(this.getSourceGoraFields()) ;
-System.out.println("newGoraFields = "+Arrays.toString(newGoraFields)+". Will delete source fields from newGoraFields.") ;
+            if (LOG.isTraceEnabled()) LOG.trace("newGoraFields = {}.", Arrays.toString(newGoraFields)) ;
             String[] deleteGoraFields = (String[]) ArrayUtils.clone(this.getSourceGoraFields()) ;
             Iterator fieldNameIterator = sourceFields.iterator() ;
             while (fieldNameIterator.hasNext()) {
                 String fName = (String)fieldNameIterator.next() ;
-System.out.println("  fieldname to delete: " + fName) ;
-                ArrayUtils.removeElement(deleteGoraFields,fName) ;
+                if (LOG.isTraceEnabled()) LOG.trace("  fieldname to delete: {}", fName) ;
+                deleteGoraFields = (String[]) ArrayUtils.removeElement(deleteGoraFields,fName) ;
             }
-System.out.println("  fields to delete = " + Arrays.toString(newGoraFields) ) ;
+            if (LOG.isTraceEnabled()) LOG.trace("  fields to delete = {}", Arrays.toString(deleteGoraFields) ) ;
             for (int i=0 ; i<deleteGoraFields.length ; i++) {
-                ArrayUtils.removeElement(newGoraFields, deleteGoraFields[i]) ;
+                newGoraFields = (String[]) ArrayUtils.removeElement(newGoraFields, deleteGoraFields[i]) ;
             }
-System.out.println("  after deletion, SourceGoraFields = " + Arrays.toString(newGoraFields)) ;
+            if (LOG.isTraceEnabled()) LOG.trace("  after deletion, SourceGoraFields = {}", Arrays.toString(newGoraFields)) ;
             this.setSourceGoraFields(newGoraFields) ;
         }else{
-System.out.println("  Source all("+sourceFields.isAll()+") or unknown("+sourceFields.isUnknown()+") --> sourceGoraFields = all from entity.") ;
+            if (LOG.isTraceEnabled()) LOG.trace("  Source all({}) or unknown({}) --> sourceGoraFields = all from entity.", sourceFields.isAll(), sourceFields.isUnknown()) ;
         }
         return this.getSourceFields() ; // == just set cascadingSourceFields 
     }    
@@ -302,10 +302,10 @@ System.out.println("  Source all("+sourceFields.isAll()+") or unknown("+sourceFi
             String[] deleteGoraFields = (String[]) ArrayUtils.clone(this.getSinkGoraFields()) ;
             Iterator fieldNameIterator = sinkFields.iterator() ;
             while (fieldNameIterator.hasNext()) {
-                ArrayUtils.removeElement(deleteGoraFields,(String)fieldNameIterator.next()) ;
+                deleteGoraFields = (String[]) ArrayUtils.removeElement(deleteGoraFields,(String)fieldNameIterator.next()) ;
             }
             for (int i=0 ; i<deleteGoraFields.length ; i++) {
-                ArrayUtils.removeElement(newGoraFields, deleteGoraFields[i]) ;
+                newGoraFields = (String[]) ArrayUtils.removeElement(newGoraFields, deleteGoraFields[i]) ;
             }
             this.setSinkGoraFields(newGoraFields) ;
         }
