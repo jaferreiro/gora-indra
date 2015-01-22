@@ -31,9 +31,10 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.reflect.ReflectData;
-import org.apache.avro.specific.SpecificDatumReader;
-import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.gora.avro.PersistentDatumReader;
+import org.apache.gora.avro.PersistentDatumWriter;
 import org.apache.gora.persistency.Persistent;
+import org.apache.gora.persistency.impl.PersistentBase;
 
 /**
  * An utility class for Avro related tasks
@@ -100,11 +101,10 @@ public class AvroUtils {
     return fieldNames;
   }
 
-  public static <T extends Persistent> T deepClonePersistent(T persistent) {
+  public static <T extends PersistentBase> T deepClonePersistent(T persistent) {
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
     BinaryEncoder enc = EncoderFactory.get().binaryEncoder(bos, null);
-    SpecificDatumWriter<Persistent> writer = new SpecificDatumWriter<Persistent>(
-        persistent.getSchema());
+    PersistentDatumWriter<T> writer = new PersistentDatumWriter<T>(persistent.getSchema());
     try {
       writer.write(persistent, enc);
     } catch (IOException e) {
@@ -115,9 +115,7 @@ public class AvroUtils {
     }
     byte[] value = bos.toByteArray();
     Decoder dec = DecoderFactory.get().binaryDecoder(value, null);
-    @SuppressWarnings("unchecked")
-    SpecificDatumReader<T> reader = new SpecificDatumReader<T>(
-        (Class<T>) persistent.getClass());
+    PersistentDatumReader<T> reader = new PersistentDatumReader<T>(persistent.getSchema());
     try {
       return reader.read(null, dec);
     } catch (IOException e) {

@@ -54,7 +54,7 @@
 
     <properties>
         <osgi.import>*</osgi.import>
-        <osgi.export>org.apache.gora*;version="${project.version}";-noimport:=true</osgi.export>
+        <osgi.export>org.apache.gora*,org.apache.avro.io;version="${project.version}";-noimport:=true</osgi.export>
     </properties>
 
     <build>
