@@ -18,17 +18,25 @@
 
 package org.apache.gora.mapreduce;
 
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import junit.framework.Assert;
+
 import org.apache.avro.Schema.Field;
+import org.apache.avro.util.Utf8;
 import org.apache.gora.examples.WebPageDataCreator;
+import org.apache.gora.examples.generated.Metadata;
 import org.apache.gora.examples.generated.TokenDatum;
 import org.apache.gora.examples.generated.WebPage;
+import org.apache.gora.examples.mapreduce.MapReduceSerialization;
 import org.apache.gora.examples.mapreduce.QueryCounter;
 import org.apache.gora.examples.mapreduce.WordCount;
 import org.apache.gora.query.Query;
+import org.apache.gora.query.Result;
 import org.apache.gora.store.DataStore;
 import org.apache.gora.store.impl.DataStoreBase;
 import org.apache.hadoop.conf.Configuration;
@@ -102,6 +110,45 @@ public class MapReduceTestUtils {
     for(Map.Entry<String, Integer> entry:actualCounts.entrySet()) {
       assertTokenCount(outStore, entry.getKey(), entry.getValue()); 
     }
+  }
+  
+  public static void testMapReduceSerialization(Configuration conf, DataStore<String,WebPage> inStore, DataStore<String,
+      WebPage> outStore) throws Exception {
+    //Datastore now has to be a Hadoop based datastore
+    ((DataStoreBase<String,WebPage>)inStore).setConf(conf);
+    ((DataStoreBase<String,WebPage>)outStore).setConf(conf);
+    
+    //create input
+    WebPage page = WebPage.newBuilder().build();
+    page.setUrl("TestURL");
+    List<CharSequence> content = new ArrayList<CharSequence>() ;
+    content.add("parsed1") ;
+    content.add("parsed2") ;
+    page.setParsedContent(content);
+    page.setContent(ByteBuffer.wrap("content".getBytes()));
+    inStore.put("key1", page);
+    inStore.flush();
+    
+    // expected 
+    WebPage expectedPage = WebPage.newBuilder().build();
+    expectedPage.setUrl("hola");
+    List<CharSequence> expectedContent = new ArrayList<CharSequence>() ;
+    expectedContent.add("parsed1") ;
+    expectedContent.add("parsed2") ;
+    expectedPage.setParsedContent(expectedContent);
+    expectedPage.setContent(ByteBuffer.wrap("content".getBytes()));
+    
+    //run the job
+    MapReduceSerialization mapReduceSerialization = new MapReduceSerialization(conf);
+    mapReduceSerialization.mapReduceSerialization(inStore, outStore);
+    
+    Query<String,WebPage> outputQuery = outStore.newQuery() ;
+    Result<String,WebPage> serializationResult = outStore.execute(outputQuery) ;
+
+    while (serializationResult.next()) {
+      Assert.assertEquals(expectedPage, serializationResult.get()) ;
+    }
+    
   }
   
   private static void assertTokenCount(DataStore<String, TokenDatum> outStore,

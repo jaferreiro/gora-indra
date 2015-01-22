@@ -1,0 +1,9 @@
+{
+	"type":"record",
+	"name":"MockPersistent",
+	"namespace":"org.apache.gora.mock.persistency",
+	"fields":[
+		{"name":"foo","type":"int"},
+		{"name":"baz","type":"int"}
+	]
+}

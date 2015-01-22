@@ -29,9 +29,9 @@ import java.util.Properties;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
-import org.apache.avro.specific.SpecificDatumReader;
-import org.apache.avro.specific.SpecificDatumWriter; 
 import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.gora.avro.PersistentDatumReader;
+import org.apache.gora.avro.PersistentDatumWriter;
 import org.apache.gora.avro.store.AvroStore;
 import org.apache.gora.persistency.BeanFactory;
 import org.apache.gora.persistency.Persistent;
@@ -73,9 +73,9 @@ public abstract class DataStoreBase<K, T extends PersistentBase>
 
   protected Properties properties;
 
-  protected SpecificDatumReader<T> datumReader;
+  protected PersistentDatumReader<T> datumReader;
 
-  protected SpecificDatumWriter<T> datumWriter;
+  protected PersistentDatumWriter<T> datumWriter;
   
   public static final Logger LOG = LoggerFactory.getLogger(AvroStore.class);
 
@@ -96,8 +96,8 @@ public abstract class DataStoreBase<K, T extends PersistentBase>
     autoCreateSchema = DataStoreFactory.getAutoCreateSchema(properties, this);
     this.properties = properties;
 
-    datumReader = new SpecificDatumReader<T>(schema);
-    datumWriter = new SpecificDatumWriter<T>(schema);
+    datumReader = new PersistentDatumReader<T>(schema, false);
+    datumWriter = new PersistentDatumWriter<T>(schema, false);
   }
 
   @Override

@@ -110,6 +110,7 @@ public class IOUtils {
     try {
       serializer.open(os);
       serializer.serialize(obj);
+      serializer.close();
 
       int length = 0;
       List<ByteBuffer> buffers = os.getBufferList();
