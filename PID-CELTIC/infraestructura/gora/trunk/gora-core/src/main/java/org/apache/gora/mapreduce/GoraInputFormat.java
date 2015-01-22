@@ -29,6 +29,7 @@ import org.apache.gora.query.impl.FileSplitPartitionQuery;
 import org.apache.gora.store.DataStore;
 import org.apache.gora.store.DataStoreFactory;
 import org.apache.gora.store.FileBackedDataStore;
+import org.apache.gora.store.impl.DataStoreBase;
 import org.apache.gora.util.IOUtils;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
@@ -91,6 +92,7 @@ public class GoraInputFormat<K, T extends PersistentBase>
   public List<InputSplit> getSplits(JobContext context) throws IOException,
       InterruptedException {
 
+    ((DataStoreBase)dataStore).setContext(context) ;
     List<PartitionQuery<K, T>> queries = dataStore.getPartitions(query);
     List<InputSplit> splits = new ArrayList<InputSplit>(queries.size());
 

@@ -47,6 +47,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.mapreduce.JobContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,6 +80,9 @@ public abstract class DataStoreBase<K, T extends PersistentBase>
   
   public static final Logger LOG = LoggerFactory.getLogger(AvroStore.class);
 
+  /** Needed for getting plits **/
+  private JobContext context = null ;
+  
   public DataStoreBase() {
   }
 
@@ -100,6 +104,14 @@ public abstract class DataStoreBase<K, T extends PersistentBase>
     datumWriter = new PersistentDatumWriter<T>(schema, false);
   }
 
+  public JobContext getContext() {
+    return context;
+  }
+
+  public void setContext(JobContext context) {
+    this.context = context;
+  }
+  
   @Override
   public void setPersistentClass(Class<T> persistentClass) {
     this.persistentClass = persistentClass;
