@@ -418,7 +418,10 @@ implements Configurable {
     }
     List<PartitionQuery<K,T>> partitions = new ArrayList<PartitionQuery<K,T>>(keys.getFirst().length);
     for (int i = 0; i < keys.getFirst().length; i++) {
+      LOG.debug("Partitions") ;
+
       String regionLocation = table.getRegionLocation(keys.getFirst()[i]).getServerAddress().getHostname();
+      LOG.debug("  Region {}, location {}", i, regionLocation) ;
       byte[] startRow = query.getStartKey() != null ? toBytes(query.getStartKey())
           : HConstants.EMPTY_START_ROW;
       byte[] stopRow = query.getEndKey() != null ? toBytes(query.getEndKey())
@@ -443,6 +446,12 @@ implements Configurable {
         K endKey = Arrays.equals(HConstants.EMPTY_END_ROW, splitStop) ?
             null : HBaseByteInterface.fromBytes(keyClass, splitStop);
 
+        LOG.debug("  Query start key: [{}]", query.getStartKey()) ;
+        LOG.debug("  Query end key: [{}]", query.getEndKey()) ;
+        LOG.debug("  Array split start [{}]", splitStart) ;
+        LOG.debug("  Array split stop [{}]", splitStop) ;
+        LOG.debug("  Start key: {}, end key: {}", startKey, endKey) ;
+        
         PartitionQueryImpl<K, T> partition = new PartitionQueryImpl<K, T>(
             query, startKey, endKey, regionLocation);
         partition.setConf(getConf());
