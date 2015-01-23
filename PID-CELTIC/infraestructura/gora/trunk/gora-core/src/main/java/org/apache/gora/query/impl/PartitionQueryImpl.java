@@ -27,19 +27,18 @@ import org.apache.gora.filter.Filter;
 import org.apache.gora.persistency.impl.PersistentBase;
 import org.apache.gora.query.PartitionQuery;
 import org.apache.gora.query.Query;
-import org.apache.gora.query.Result;
 import org.apache.gora.store.DataStore;
 import org.apache.gora.store.impl.DataStoreBase;
 import org.apache.gora.util.IOUtils;
-import org.apache.hadoop.conf.Configuration;
 
 /**
  * Implementation for {@link PartitionQuery}.
  */
-public class PartitionQueryImpl<K, T extends PersistentBase> extends QueryBase<K, T> implements PartitionQuery<K, T> {
+public class PartitionQueryImpl<K, T extends PersistentBase> extends QueryBase<K, T>
+    implements PartitionQuery<K, T> {
 
   protected Query<K, T> baseQuery;
-  protected String[]    locations;
+  protected String[] locations;
 
   public PartitionQueryImpl() {
     super(null);
@@ -49,7 +48,8 @@ public class PartitionQueryImpl<K, T extends PersistentBase> extends QueryBase<K
     this(baseQuery, null, null, locations);
   }
 
-  public PartitionQueryImpl(Query<K, T> baseQuery, K startKey, K endKey, String... locations) {
+  public PartitionQueryImpl(Query<K, T> baseQuery, K startKey, K endKey,
+      String... locations) {
     super(baseQuery.getDataStore());
     this.baseQuery = baseQuery;
     this.locations = locations;
@@ -128,12 +128,12 @@ public class PartitionQueryImpl<K, T extends PersistentBase> extends QueryBase<K
   public void setLimit(long limit) {
     baseQuery.setLimit(limit);
   }
-
+  
   @Override
   public Filter<K, T> getFilter() {
     return baseQuery.getFilter();
   }
-
+  
   @Override
   public void setFilter(Filter<K, T> filter) {
     baseQuery.setFilter(filter);
@@ -164,75 +164,11 @@ public class PartitionQueryImpl<K, T extends PersistentBase> extends QueryBase<K
   @Override
   @SuppressWarnings({ "rawtypes" })
   public boolean equals(Object obj) {
-    if (obj instanceof PartitionQueryImpl) {
+    if(obj instanceof PartitionQueryImpl) {
       PartitionQueryImpl that = (PartitionQueryImpl) obj;
-      return this.baseQuery.equals(that.baseQuery) && Arrays.equals(locations, that.locations);
+      return this.baseQuery.equals(that.baseQuery)
+        && Arrays.equals(locations, that.locations);
     }
     return false;
   }
-
-  /* (non-Javadoc)
-  * @see org.apache.gora.query.impl.QueryBase#execute()
-  */
-  @Override
-  public Result<K, T> execute() {
-    return this.baseQuery.execute();
-  }
-
-  /* (non-Javadoc)
-  * @see org.apache.gora.query.impl.QueryBase#setDataStore(org.apache.gora.store.DataStore)
-  */
-  @Override
-  public void setDataStore(DataStore<K, T> dataStore) {
-    this.baseQuery.setDataStore(dataStore);
-  }
-
-  /* (non-Javadoc)
-  * @see org.apache.gora.query.impl.QueryBase#isLocalFilterEnabled()
-  */
-  @Override
-  public boolean isLocalFilterEnabled() {
-    return this.baseQuery.isLocalFilterEnabled();
-  }
-
-  /* (non-Javadoc)
-  * @see org.apache.gora.query.impl.QueryBase#setLocalFilterEnabled(boolean)
-  */
-  @Override
-  public void setLocalFilterEnabled(boolean enable) {
-    this.baseQuery.setLocalFilterEnabled(enable);
-  }
-
-  /* (non-Javadoc)
-  * @see org.apache.gora.query.impl.QueryBase#getConf()
-  */
-  @Override
-  public Configuration getConf() {
-    return ((QueryBase) this.baseQuery).getConf();
-  }
-
-  /* (non-Javadoc)
-  * @see org.apache.gora.query.impl.QueryBase#setConf(org.apache.hadoop.conf.Configuration)
-  */
-  @Override
-  public void setConf(Configuration conf) {
-    ((QueryBase) this.baseQuery).setConf(conf);
-  }
-
-  /* (non-Javadoc)
-  * @see org.apache.gora.query.impl.QueryBase#hashCode()
-  */
-  @Override
-  public int hashCode() {
-    return (this.baseQuery.hashCode() + this.startKey.hashCode() + this.endKey.hashCode() + this.locations.hashCode());
-  }
-
-  /* (non-Javadoc)
-  * @see org.apache.gora.query.impl.QueryBase#toString()
-  */
-  @Override
-  public String toString() {
-    return "PartitionQuery " + this.startKey + " - " + this.endKey + " @locations: " + Arrays.toString(this.locations);
-  }
-
 }

@@ -131,7 +131,6 @@ public class HBaseTableConnection implements HTableInterface {
   public Pair<byte[][], byte[][]> getStartEndKeys() throws IOException {
     return getTable().getStartEndKeys();
   }
-
   /**
    * getRegionLocation provided by {@link HTable} but not 
    * {@link HTableInterface}.
@@ -141,11 +140,6 @@ public class HBaseTableConnection implements HTableInterface {
     return getTable().getRegionLocation(bs);
   }
 
-  public HRegionLocation getRegionLocation(final byte [] row, boolean reload)
-  throws IOException {
-    return getTable().getRegionLocation(row, reload) ;
-  }
-  
   @Override
   public HTableDescriptor getTableDescriptor() throws IOException {
     return getTable().getTableDescriptor();
@@ -308,11 +302,13 @@ public class HBaseTableConnection implements HTableInterface {
   @Override
   public void setAutoFlush(boolean autoFlush) {
     // TODO Auto-generated method stub
+    
   }
 
   @Override
   public void setAutoFlush(boolean autoFlush, boolean clearBufferOnFail) {
     // TODO Auto-generated method stub
+    
   }
 
   @Override
