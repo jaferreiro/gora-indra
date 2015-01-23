@@ -67,12 +67,10 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.mapreduce.TableSplit;
 import org.apache.hadoop.hbase.util.Addressing;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.hbase.util.Strings;
-import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.net.DNS;
 import org.jdom.Document;
 import org.jdom.Element;
@@ -505,7 +503,6 @@ implements Configurable {
         LOG.debug("  Array split start [{}]", splitStart) ;
         LOG.debug("  Array split stop [{}]", splitStop) ;
         LOG.debug("  Start key: {}, end key: {}", startKey, endKey) ;
-        
         PartitionQueryImpl<K, T> partition = new PartitionQueryImpl<K, T>(
             query, startKey, endKey, regionLocation);
         partition.setConf(getConf());
