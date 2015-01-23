@@ -59,7 +59,7 @@ public class PartitionQueryImpl<K, T extends PersistentBase> extends QueryBase<K
   }
 
   @Override
-public String[] getLocations() {
+  public String[] getLocations() {
     return locations;
   }
 
