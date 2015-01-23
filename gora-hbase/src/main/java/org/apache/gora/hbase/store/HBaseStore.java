@@ -22,7 +22,6 @@ import static org.apache.gora.hbase.util.HBaseByteInterface.toBytes;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -32,8 +31,6 @@ import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Properties;
 import java.util.Set;
-
-import javax.naming.NamingException;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -57,8 +54,6 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hbase.HRegionLocation;
-import org.apache.hadoop.hbase.HServerAddress;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
@@ -67,11 +62,8 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.util.Addressing;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
-import org.apache.hadoop.hbase.util.Strings;
-import org.apache.hadoop.net.DNS;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.input.SAXBuilder;
@@ -107,13 +99,6 @@ implements Configurable {
   private HBaseFilterUtil<K, T> filterUtil;
 
   private int scannerCaching = SCANNER_CACHING_PROPERTIES_DEFAULT ;
-  
-  /** The reverse DNS lookup cache mapping: IPAddress => HostName */
-  private HashMap<InetAddress, String> reverseDNSCacheMap =
-    new HashMap<InetAddress, String>();
-  
-  /** The NameServer address */
-  private String nameServer = null;
   
   public HBaseStore()  {
   }
@@ -423,56 +408,17 @@ implements Configurable {
       throws IOException {
 
     // taken from o.a.h.hbase.mapreduce.TableInputFormatBase
-
+    Pair<byte[][], byte[][]> keys = table.getStartEndKeys();
+    if (keys == null || keys.getFirst() == null ||
+        keys.getFirst().length == 0) {
+      throw new IOException("Expecting at least one region.");
+    }
     if (table == null) {
       throw new IOException("No table was provided.");
     }
-    // Get the name server address and the default value is null.
-    this.nameServer = getContext()!=null?
-                        getContext().getConfiguration()!=null?
-                          getContext().getConfiguration().get("hbase.nameserver.address", null)
-                          :null
-                        :null ;
-
-    Pair<byte[][], byte[][]> keys = table.getStartEndKeys();
     List<PartitionQuery<K,T>> partitions = new ArrayList<PartitionQuery<K,T>>(keys.getFirst().length);
-    
-    if (keys == null || keys.getFirst() == null ||
-        keys.getFirst().length == 0) {
-      HRegionLocation regLoc = table.getRegionLocation(
-          HConstants.EMPTY_BYTE_ARRAY, false);
-      if (null == regLoc) {
-        throw new IOException("Expecting at least one region.");
-      }
-      @SuppressWarnings("unchecked")
-      PartitionQueryImpl<K, T> partition = new PartitionQueryImpl<K, T>(
-          query, (K)HConstants.EMPTY_BYTE_ARRAY, (K)HConstants.EMPTY_BYTE_ARRAY, regLoc
-          .getHostnamePort().split(Addressing.HOSTNAME_PORT_SEPARATOR)[0]);
-      partition.setConf(getConf());
-      partitions.add(partition);      
-      return partitions;
-    }
-
     for (int i = 0; i < keys.getFirst().length; i++) {
-      LOG.debug("Partitions") ;
-
-      if ( !includeRegionInSplit(keys.getFirst()[i], keys.getSecond()[i])) {
-        continue;
-      }
-      HServerAddress regionServerAddress = 
-          table.getRegionLocation(keys.getFirst()[i]).getServerAddress();
-      InetAddress regionAddress =
-          regionServerAddress.getInetSocketAddress().getAddress();
-      String regionLocation;
-      try {
-        regionLocation = reverseDNS(regionAddress);
-      } catch (NamingException e) {
-        LOG.error("Cannot resolve the host name for " + regionAddress +
-            " because of " + e);
-        regionLocation = regionServerAddress.getHostname();
-      }
-
-      LOG.debug("  Partition/split {}, location {}", i, regionLocation) ;
+      String regionLocation = table.getRegionLocation(keys.getFirst()[i]).getServerAddress().getHostname();
       byte[] startRow = query.getStartKey() != null ? toBytes(query.getStartKey())
           : HConstants.EMPTY_START_ROW;
       byte[] stopRow = query.getEndKey() != null ? toBytes(query.getEndKey())
@@ -482,8 +428,7 @@ implements Configurable {
       if ((startRow.length == 0 || keys.getSecond()[i].length == 0 ||
           Bytes.compareTo(startRow, keys.getSecond()[i]) < 0) &&
           (stopRow.length == 0 ||
-              Bytes.compareTo(stopRow, keys.getFirst()[i]) > 0))
-      {
+              Bytes.compareTo(stopRow, keys.getFirst()[i]) > 0)) {
 
         byte[] splitStart = startRow.length == 0 || 
             Bytes.compareTo(keys.getFirst()[i], startRow) >= 0 ? 
@@ -492,17 +437,12 @@ implements Configurable {
         byte[] splitStop = (stopRow.length == 0 || 
             Bytes.compareTo(keys.getSecond()[i], stopRow) <= 0) && 
             keys.getSecond()[i].length > 0 ? keys.getSecond()[i] : stopRow;
-            
+
         K startKey = Arrays.equals(HConstants.EMPTY_START_ROW, splitStart) ?
             null : HBaseByteInterface.fromBytes(keyClass, splitStart);
         K endKey = Arrays.equals(HConstants.EMPTY_END_ROW, splitStop) ?
             null : HBaseByteInterface.fromBytes(keyClass, splitStop);
 
-        LOG.debug("  Query start key: [{}]", query.getStartKey()) ;
-        LOG.debug("  Query end key: [{}]", query.getEndKey()) ;
-        LOG.debug("  Array split start [{}]", splitStart) ;
-        LOG.debug("  Array split stop [{}]", splitStop) ;
-        LOG.debug("  Start key: {}, end key: {}", startKey, endKey) ;
         PartitionQueryImpl<K, T> partition = new PartitionQueryImpl<K, T>(
             query, startKey, endKey, regionLocation);
         partition.setConf(getConf());
@@ -513,42 +453,6 @@ implements Configurable {
     return partitions;
   }
 
-  private String reverseDNS(InetAddress ipAddress) throws NamingException {
-    String hostName = this.reverseDNSCacheMap.get(ipAddress);
-    if (hostName == null) {
-      hostName = Strings.domainNamePointerToHostName(DNS.reverseDns(ipAddress, this.nameServer));
-      this.reverseDNSCacheMap.put(ipAddress, hostName);
-    }
-    return hostName;
-  }
-  
-  /**
-  *
-  *
-  * Test if the given region is to be included in the InputSplit while splitting
-  * the regions of a table.
-  * <p>
-  * This optimization is effective when there is a specific reasoning to exclude an entire region from the M-R job,
-  * (and hence, not contributing to the InputSplit), given the start and end keys of the same. <br>
-  * Useful when we need to remember the last-processed top record and revisit the [last, current) interval for M-R processing,
-  * continuously. In addition to reducing InputSplits, reduces the load on the region server as well, due to the ordering of the keys.
-  * <br>
-  * <br>
-  * Note: It is possible that <code>endKey.length() == 0 </code> , for the last (recent) region.
-  * <br>
-  * Override this method, if you want to bulk exclude regions altogether from M-R. By default, no region is excluded( i.e. all regions are included).
-  *
-  *
-  * @param startKey Start key of the region
-  * @param endKey End key of the region
-  * @return true, if this region needs to be included as part of the input (default).
-  *
-  */
- protected boolean includeRegionInSplit(final byte[] startKey, final byte [] endKey) {
-   return true;
- }
-
-  
   @Override
   public org.apache.gora.query.Result<K, T> execute(Query<K, T> query){
     try{
