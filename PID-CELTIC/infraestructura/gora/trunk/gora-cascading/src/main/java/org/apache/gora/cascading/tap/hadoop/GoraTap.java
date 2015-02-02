@@ -40,11 +40,13 @@ public class GoraTap extends AbstractGoraTap<JobConf, RecordReader, OutputCollec
 
     @Override
     public TupleEntryIterator openForRead(FlowProcess<JobConf> flowProcess, RecordReader input) throws IOException {
+        if (LOG.isTraceEnabled()) LOG.trace("openForRead: RecorReader input is {}", (input==null)?"null": "not null") ;
         return new HadoopTupleEntrySchemeIterator(flowProcess, this, input) ;
     }
 
     @Override
     public TupleEntryCollector openForWrite(FlowProcess<JobConf> flowProcess, OutputCollector output) throws IOException {
+        if (LOG.isTraceEnabled()) LOG.trace("openForWrite") ;
         GoraTupleEntrySchemeCollector goraTupleCollector = new GoraTupleEntrySchemeCollector(flowProcess, this) ;
         goraTupleCollector.prepare() ;
         return goraTupleCollector ;

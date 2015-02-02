@@ -207,34 +207,43 @@ public class GoraScheme extends AbstractGoraScheme<JobConf, // Config
         OutputCollector collector = sinkCall.getOutput();
         TupleEntry tupleEntry = sinkCall.getOutgoingEntry() ;
 
-        LOG.debug("(Tuple to sink) ", tupleEntry.toString()) ;
-        
         String key = tupleEntry.getString(this.getTupleKeyName()) ;
 
+        if (LOG.isTraceEnabled()) LOG.trace("    key:{}  ", key) ;
+        if (LOG.isTraceEnabled()) LOG.trace("        Tuple to sink: {}  ", tupleEntry.toString()) ;
+        
         if (key == null) return ;
 
         if (this.isSinkAsPersistent()) {
+            if (LOG.isTraceEnabled()) LOG.trace("        Sink as persistent.") ;
+
             // tuple ("key","persistent")
             PersistentBase persistent = (PersistentBase) tupleEntry.getObject(this.getTuplePersistentFieldName()) ;
 
             persistent.clearDirty() ;
             // Set dirty the sink fields of the Persistent instance
+            if (LOG.isTraceEnabled()) LOG.trace("        Setting dirty fields:") ;
             for (String fieldName : this.getSinkGoraFields()) {
                 // TODO: Maybe log warn when a field does not exist? (but slower)
+                if (LOG.isTraceEnabled()) LOG.trace("          {}", fieldName) ;
                 persistent.setDirty(fieldName) ;
             }
             collector.collect(key, persistent) ;
         } else {
+            if (LOG.isTraceEnabled()) LOG.trace("        Sink as fields.") ;
             JobConf conf = flowProcess.getConfigCopy() ;
             // tuple (key, field, field,...)
             PersistentBase newOutputPersistent =  (PersistentBase) (((GoraTupleEntrySchemeCollector) sinkCall.getOutput()).getTap().getDataStore(conf).newPersistent()) ;
             
+            if (LOG.isTraceEnabled()) LOG.trace("        Copying tuple fields to Persistent:") ;
             // Copy each field of the tuple to the Persistent instance
             for (String fieldName : this.getSinkGoraFields()) {
                 try {
                     int indexInPersistent = newOutputPersistent.getField2IndexMapping().get(fieldName) ;
                     Object value = tupleEntry.getObject(fieldName) ;
-                    
+
+                    if (LOG.isTraceEnabled()) LOG.trace("        Set value: {}, to field {}", value, fieldName) ;
+
                     // convert String -> Utf8
                     if (value instanceof String){
                         value = new Utf8((String)value) ;
