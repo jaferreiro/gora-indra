@@ -222,17 +222,17 @@ public abstract class AbstractGoraScheme<CONFIG, INPUT, OUTPUT, SOURCECONTEXT, S
 
         Fields sourceFields = this.getSourceFields() ;
 
-        if (LOG.isTraceEnabled()) LOG.trace("Source fields : {} ", sourceFields.print()) ;
+        if (LOG.isDebugEnabled()) LOG.debug("Source fields : {} ", sourceFields.print()) ;
         
         // Source fields for Cascading
         Fields cascadingSourceFields = new Fields(this.getTupleKeyName()) ; // Cascading source fields start as ("key")
         if (this.isSourceAsPersistent()) { // (key, Persistent) 
-            if (LOG.isTraceEnabled()) LOG.trace("  Source as persistent") ;
+            if (LOG.isDebugEnabled()) LOG.debug("  Source as persistent") ;
             cascadingSourceFields = cascadingSourceFields.append(new Fields(this.getTuplePersistentFieldName())) ;
         } else {
-            if (LOG.isTraceEnabled()) LOG.trace("  Source as fields") ;
+            if (LOG.isDebugEnabled()) LOG.debug("  Source as fields") ;
             if (sourceFields.isAll() || sourceFields.isUnknown()) {
-                if (LOG.isTraceEnabled()) LOG.trace("  Source all({}) or unknown({}).", sourceFields.isAll(), sourceFields.isUnknown()) ;
+                if (LOG.isDebugEnabled()) LOG.debug("  Source all({}) or unknown({}).", sourceFields.isAll(), sourceFields.isUnknown()) ;
                 // (key, persistent_field, persistent_field,...)
                 cascadingSourceFields = cascadingSourceFields.append(new Fields(this.getSourceGoraFields())) ;
             } else {
@@ -241,29 +241,29 @@ public abstract class AbstractGoraScheme<CONFIG, INPUT, OUTPUT, SOURCECONTEXT, S
             }
         }
         this.setSourceFields(cascadingSourceFields) ;
-        if (LOG.isTraceEnabled()) LOG.trace("  Source for cascading : {}", cascadingSourceFields.print()) ;
+        if (LOG.isDebugEnabled()) LOG.debug("  Source for cascading : {}", cascadingSourceFields.print()) ;
         
         // Gora fields (default above)
         if ( !sourceFields.isAll() && !sourceFields.isUnknown()) {
             // Gora fields = sourceFields(constructor) INTERSECTION gora fields
             // (intersection from Persistent and declared in constructor)
             String[] newGoraFields = (String[]) ArrayUtils.clone(this.getSourceGoraFields()) ;
-            if (LOG.isTraceEnabled()) LOG.trace("newGoraFields = {}.", Arrays.toString(newGoraFields)) ;
+            if (LOG.isDebugEnabled()) LOG.debug("newGoraFields = {}.", Arrays.toString(newGoraFields)) ;
             String[] deleteGoraFields = (String[]) ArrayUtils.clone(this.getSourceGoraFields()) ;
             Iterator fieldNameIterator = sourceFields.iterator() ;
             while (fieldNameIterator.hasNext()) {
                 String fName = (String)fieldNameIterator.next() ;
-                if (LOG.isTraceEnabled()) LOG.trace("  fieldname to delete: {}", fName) ;
+                if (LOG.isDebugEnabled()) LOG.debug("  fieldname to delete: {}", fName) ;
                 deleteGoraFields = (String[]) ArrayUtils.removeElement(deleteGoraFields,fName) ;
             }
-            if (LOG.isTraceEnabled()) LOG.trace("  fields to delete = {}", Arrays.toString(deleteGoraFields) ) ;
+            if (LOG.isDebugEnabled()) LOG.debug("  fields to delete = {}", Arrays.toString(deleteGoraFields) ) ;
             for (int i=0 ; i<deleteGoraFields.length ; i++) {
                 newGoraFields = (String[]) ArrayUtils.removeElement(newGoraFields, deleteGoraFields[i]) ;
             }
-            if (LOG.isTraceEnabled()) LOG.trace("  after deletion, SourceGoraFields = {}", Arrays.toString(newGoraFields)) ;
+            if (LOG.isDebugEnabled()) LOG.debug("  after deletion, SourceGoraFields = {}", Arrays.toString(newGoraFields)) ;
             this.setSourceGoraFields(newGoraFields) ;
         }else{
-            if (LOG.isTraceEnabled()) LOG.trace("  Source all({}) or unknown({}) --> sourceGoraFields = all from entity.", sourceFields.isAll(), sourceFields.isUnknown()) ;
+            if (LOG.isDebugEnabled()) LOG.debug("  Source all({}) or unknown({}) --> sourceGoraFields = all from entity.", sourceFields.isAll(), sourceFields.isUnknown()) ;
         }
         return this.getSourceFields() ; // == just set cascadingSourceFields 
     }    
@@ -279,12 +279,17 @@ public abstract class AbstractGoraScheme<CONFIG, INPUT, OUTPUT, SOURCECONTEXT, S
 
         Fields sinkFields = this.getSinkFields() ;
 
+        if (LOG.isDebugEnabled()) LOG.debug("Sink fields : {} ", sinkFields.print()) ;
+
         // Sink fields for Cascading
         Fields cascadingSinkFields = new Fields(this.getTupleKeyName()) ;
         if (this.isSinkAsPersistent()) { // (key, Persistent) 
+            if (LOG.isDebugEnabled()) LOG.debug("  Sink as persistent") ;
             cascadingSinkFields = cascadingSinkFields.append(new Fields(this.getTuplePersistentFieldName())) ;
         } else {
+            if (LOG.isDebugEnabled()) LOG.debug("  Sink as fields") ;
             if (sinkFields.isAll() || sinkFields.isUnknown()) {
+                if (LOG.isDebugEnabled()) LOG.debug("  Sink all({}) or unknown({}).", sinkFields.isAll(), sinkFields.isUnknown()) ;
                 // (key, persistent_field, persistent_field,...)
                 cascadingSinkFields = cascadingSinkFields.append(new Fields(this.getSinkGoraFields())) ;
             } else {
@@ -293,21 +298,29 @@ public abstract class AbstractGoraScheme<CONFIG, INPUT, OUTPUT, SOURCECONTEXT, S
             }
         }
         this.setSinkFields(cascadingSinkFields) ;
+        if (LOG.isDebugEnabled()) LOG.debug("  Sink for cascading : {}", cascadingSinkFields.print()) ;
         
         // Gora fields (default above)
         if ( ! (sinkFields.isAll() || sinkFields.isUnknown())) {
             // Gora fields = sinkFields(constructor) AND gora fields
             // (intersection from Persistent and declared in constructor)
             String[] newGoraFields = (String[]) ArrayUtils.clone(this.getSinkGoraFields()) ;
+            if (LOG.isDebugEnabled()) LOG.debug("newGoraFields = {}.", Arrays.toString(newGoraFields)) ;
             String[] deleteGoraFields = (String[]) ArrayUtils.clone(this.getSinkGoraFields()) ;
             Iterator fieldNameIterator = sinkFields.iterator() ;
             while (fieldNameIterator.hasNext()) {
-                deleteGoraFields = (String[]) ArrayUtils.removeElement(deleteGoraFields,(String)fieldNameIterator.next()) ;
+                String fName = (String)fieldNameIterator.next() ;
+                if (LOG.isDebugEnabled()) LOG.debug("  fieldname to delete: {}", fName) ;
+                deleteGoraFields = (String[]) ArrayUtils.removeElement(deleteGoraFields,fName) ;
             }
+            if (LOG.isDebugEnabled()) LOG.debug("  fields to delete = {}", Arrays.toString(deleteGoraFields) ) ;
             for (int i=0 ; i<deleteGoraFields.length ; i++) {
                 newGoraFields = (String[]) ArrayUtils.removeElement(newGoraFields, deleteGoraFields[i]) ;
             }
+            if (LOG.isDebugEnabled()) LOG.debug("  after deletion, SinkGoraFields = {}", Arrays.toString(newGoraFields)) ;
             this.setSinkGoraFields(newGoraFields) ;
+        }else{
+            if (LOG.isDebugEnabled()) LOG.debug("  Sink all({}) or unknown({}) --> sourceGoraFields = all from entity.", sinkFields.isAll(), sinkFields.isUnknown()) ;
         }
         return this.getSinkFields() ; // == just set cascadingSinkFields 
 
@@ -315,26 +328,36 @@ public abstract class AbstractGoraScheme<CONFIG, INPUT, OUTPUT, SOURCECONTEXT, S
     
     @SuppressWarnings({ "unchecked" })
     public Query<?,? extends Persistent> createQuery(FlowProcess<CONFIG> flowProcess, TAP tap) throws GoraException {
-        
+        if (LOG.isDebugEnabled()) LOG.debug("Creating Query") ;
+            
         Query query = tap.getDataStore(flowProcess.getConfigCopy()).newQuery() ;
         
-        if (this.queryStartKey != null)
+        if (this.queryStartKey != null) {
+            if (LOG.isDebugEnabled()) LOG.debug("    Start key: {}", this.queryStartKey) ;
             query.setStartKey(this.queryStartKey) ;
-        if (this.queryEndKey != null)
+        }
+        if (this.queryEndKey != null) {
+            if (LOG.isDebugEnabled()) LOG.debug("    End key: {}", this.queryEndKey) ;
             query.setEndKey(this.queryEndKey) ;
-        if (this.queryLimit != null)
+        }
+        if (this.queryLimit != null) {
+            if (LOG.isDebugEnabled()) LOG.debug("    Limit: {}", this.queryLimit) ;
             query.setLimit(this.queryLimit) ;
+        }
 
         // If in constructor source was ALL (or UNKNOWN), we retrieve all.
 
         if ( ! (this.getSourceFields().isAll() || this.getSourceFields().isUnknown())) {
 
+            if (LOG.isDebugEnabled()) LOG.debug("    Setting fields to retrieve.", this.queryLimit) ;
             // otherwise, retrieve only the necessary
             if (this.getSourceGoraFields().length == 0 ) {
                 this.retrieveSourceFields(null, tap) ;
             }
             query.setFields(this.getSourceGoraFields()) ;
             
+        } else {
+            if (LOG.isDebugEnabled()) LOG.debug("    Retrieve all fields. all = {}, unknown = {}", this.getSourceFields().isAll(), this.getSourceFields().isUnknown()) ;
         }
         return query ;
     }
@@ -348,6 +371,7 @@ public abstract class AbstractGoraScheme<CONFIG, INPUT, OUTPUT, SOURCECONTEXT, S
      * @param tupleFieldName
      */
     protected void setTupleFieldFromPersistent(PersistentBase persistent, TupleEntry tupleEntry, String tupleFieldName) {
+        if (LOG.isTraceEnabled()) LOG.trace("    Copying the field {} from Persistent to Tuple", tupleFieldName ) ;
         int persistentFieldIndex ;
         try {
             persistentFieldIndex = persistent.getField2IndexMapping().get(tupleFieldName) ; // NPE if field name noes not exist in Persistent instance
@@ -368,6 +392,7 @@ public abstract class AbstractGoraScheme<CONFIG, INPUT, OUTPUT, SOURCECONTEXT, S
      * @param tupleFieldName
      */
     private void setTupleFieldFromPersistent(Schema avroSchema, Object value, TupleEntry tupleEntry, String tupleFieldName) {
+        if (LOG.isTraceEnabled()) LOG.trace("    Copying the field {}, value:{}", tupleFieldName, value ) ;
         
         switch(avroSchema.getType()) {
             
