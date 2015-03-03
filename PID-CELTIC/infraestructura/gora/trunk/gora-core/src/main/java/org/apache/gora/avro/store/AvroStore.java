@@ -23,16 +23,12 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.apache.avro.io.BinaryDecoder;
-import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.io.JsonDecoder;
-import org.apache.avro.io.JsonEncoder;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.gora.avro.query.AvroQuery;
@@ -46,7 +42,6 @@ import org.apache.gora.store.impl.FileBackedDataStoreBase;
 import org.apache.gora.util.OperationNotSupportedException;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -125,8 +120,7 @@ public class AvroStore<K, T extends PersistentBase>
       encoder = null;
       decoder = null;
     }catch(IOException ex){
-      LOG.error(ex.getMessage());
-      LOG.error(ex.getStackTrace().toString());
+      LOG.error(ex.getMessage(),ex);
     }
   }
 
@@ -166,8 +160,7 @@ public class AvroStore<K, T extends PersistentBase>
       if(encoder != null)
         encoder.flush();
     }catch(IOException ex){
-      LOG.error(ex.getMessage());
-      LOG.error(ex.getStackTrace().toString());
+      LOG.error(ex.getMessage(), ex);
     }
   }
 
@@ -186,8 +179,7 @@ public class AvroStore<K, T extends PersistentBase>
     try{
       getDatumWriter().write(obj, getEncoder());
     }catch(IOException ex){
-      LOG.error(ex.getMessage());
-      LOG.error(ex.getStackTrace().toString());
+      LOG.error(ex.getMessage(), ex);
     }
   }
 
