@@ -185,6 +185,13 @@ public abstract class PersistentBase extends SpecificRecordBase implements
     setDirty(getSchema().getField(field).pos());
   }
 
+  @Override
+  public void setDirty(String[] fields) {
+    for (String field : fields) {
+      setDirty(getSchema().getField(field).pos());
+    }
+  }
+  
   public ByteBuffer getDirtyBytes() {
     return __g__dirty;
   }

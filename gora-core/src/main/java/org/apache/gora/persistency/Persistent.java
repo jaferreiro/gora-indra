@@ -78,6 +78,14 @@ public interface Persistent extends SpecificRecord, Dirtyable {
   void setDirty(String field);
 
   /**
+* Sets the fields as dirty.
+*
+* @param fields
+* the names of the fields
+*/
+  void setDirty(String[] fields);
+  
+  /**
 * Clears the field as dirty.
 *
 * @param fieldIndex
