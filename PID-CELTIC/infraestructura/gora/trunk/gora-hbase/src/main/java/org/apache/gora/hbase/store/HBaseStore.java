@@ -56,6 +56,7 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.Delete;
+import org.apache.hadoop.hbase.client.Durability;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.Put;
@@ -148,6 +149,7 @@ implements Configurable {
     try{
       boolean autoflush = this.conf.getBoolean("hbase.client.autoflush.default", false);
       table = new HBaseTableConnection(getConf(), getSchemaName(), autoflush);
+      table.getTableDescriptor().setDeferredLogFlush(true) ;
     } catch(IOException ex2){
       LOG.error(ex2.getMessage());
       LOG.error(ex2.getStackTrace().toString());
@@ -237,7 +239,9 @@ implements Configurable {
       Schema schema = persistent.getSchema();
       byte[] keyRaw = toBytes(key);
       Put put = new Put(keyRaw);
+      put.setDurability(Durability.SKIP_WAL) ;
       Delete delete = new Delete(keyRaw);
+      delete.setDurability(Durability.SKIP_WAL) ;
       List<Field> fields = schema.getFields();
       for (int i = 0; i < fields.size(); i++) {
         if (!persistent.isDirty(i)) {
@@ -259,8 +263,6 @@ implements Configurable {
       }
       if (delete.size() > 0) {
         table.delete(delete);
-        table.delete(delete);
-        table.delete(delete); // HBase sometimes does not delete arbitrarily
       }
     } catch (IOException ex2) {
       LOG.error(ex2.getMessage());
