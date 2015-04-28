@@ -846,6 +846,7 @@ implements Configurable {
       return this ;
     }
     this.scannerCaching = numRows ;
+    LOG.info("gora.hbasestore.scanner.caching = " + numRows) ;
     return this ;
   }
 }
